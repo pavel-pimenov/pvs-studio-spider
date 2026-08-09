@@ -1,5 +1,6 @@
 # PVS-Studio Spider analyzed revisions
 # format: <slug> <git-commit>
+4diac-forte      c0b0dff
 GameNetworkingSockets e707b3a
 airdc            55d51ce
 assimp           aa9f632

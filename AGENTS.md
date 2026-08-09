@@ -48,7 +48,8 @@ python3 -m app.cli analyze --verbose
 - `app/server.py` — `http.server` для раздачи отчётов.
 - `app/templates/index.html.j2` — Jinja2-шаблон landing-страницы.
 - `revisions.txt` — коммитится в git; проект с той же HEAD-ревнзией,
-  что и в файле, пропускается (`analyze --force` для полного прогона).
+  что и в файле, пропускается (`analyze --force` для полного прогона,
+  `--only SLUG ...` для выборочного анализа).
 
 ## Конвенции
 

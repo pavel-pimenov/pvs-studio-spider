@@ -81,12 +81,22 @@ def prune_orphans(cfg: Config) -> None:
 def cmd_analyze(args) -> int:
     _setup_logging(args.verbose)
     cfg = _load_config(args)
+    full_projects = list(cfg.projects)
+    prune_orphans(cfg)
+
+    if args.only:
+        wanted = set(args.only)
+        missing = wanted - {p.slug for p in cfg.projects}
+        if missing:
+            log.error("unknown project(s): %s", ", ".join(sorted(missing)))
+            return 2
+        cfg.projects = [p for p in cfg.projects if p.slug in wanted]
+
     cfg.src_dir.mkdir(parents=True, exist_ok=True)
     cfg.work_dir.mkdir(parents=True, exist_ok=True)
     cfg.reports_dir.mkdir(parents=True, exist_ok=True)
 
     analyze_mod.configure_license()
-    prune_orphans(cfg)
 
     progress = status_mod.Progress(cfg.reports_dir)
     progress.prepare(cfg.projects)
@@ -161,7 +171,7 @@ def cmd_analyze(args) -> int:
                 metrics[project.slug] = entry
                 state_mod.save_metrics(cfg.reports_dir / "metrics.json", metrics)
 
-    active = {p.slug for p in cfg.projects if p.enabled}
+    active = {p.slug for p in full_projects if p.enabled}
     revisions = {k: v for k, v in revisions.items() if k in active}
     metrics = {k: v for k, v in metrics.items() if k in active}
     state_mod.save_revisions(cfg.revisions_file, revisions)
@@ -219,6 +229,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_analyze = sub.add_parser("analyze", help="clone, build and analyze all configured projects")
     add_common(p_analyze)
     p_analyze.add_argument("--force", action="store_true", help="re-analyze projects even if the revision is unchanged")
+    p_analyze.add_argument("--only", nargs="+", metavar="SLUG", help="analyze only the given projects")
     p_analyze.set_defaults(func=cmd_analyze)
 
     p_serve = sub.add_parser("serve", help="serve the generated HTML reports over HTTP")

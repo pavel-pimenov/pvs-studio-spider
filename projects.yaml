@@ -312,3 +312,13 @@ projects:
     repo: https://github.com/jbeder/yaml-cpp.git
     ref: master
     description: "YAML parser/emitter for C++"
+
+  - name: 4diac-forte
+    repo: https://gitverse.ru/pavel-pimenov/4diac-forte.git
+    ref: master
+    description: "Eclipse 4diac FORTE IEC 61499 runtime (test project)"
+    cmake_options:
+      - -DFORTE_ARCHITECTURE=Posix
+      - -DFORTE_BUILD_EXECUTABLE=OFF
+      - -DFORTE_BUILD_STATIC_LIBRARY=ON
+      - -DFORTE_MODULE_IEC61131=ON
