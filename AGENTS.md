@@ -12,7 +12,7 @@ Docker-проект, который автоматизирует статиче�
 
 - Оркестрация — **Python 3** (пакет `app/`), без стороннего фреймворка.
 - Зависимости: `requests`, `PyYAML`, `Jinja2` (`requirements.txt`).
-- Основной runtime — Docker (`Dockerfile` на базе `ubuntu:24.04`). PVS-Studio
+- Основной runtime — Docker (`Dockerfile` на базе `ubuntu:26.04`). PVS-Studio
   ставится из официального репозитория viva64.
 - Исходники, сборки и отчёты живут в каталоге `./data` (bind-mount в `/data`).
 
@@ -36,7 +36,9 @@ python3 -m app.cli analyze --verbose
 - `app/clone.py` — `git clone`/`pull`.
 - `app/analyze.py` — настройка лицензии, CMake-сборка, запуск анализа.
 - `app/report.py` — конвертация `.plog` → `fullhtml`/`json`, генерация
-  `index.html` и `links.txt`.
+  `index.html` (портал) и `links.txt`.
+- `app/status.py` — прогресс анализа: пишет `reports_dir/status.json`,
+  который портал опрашивает каждые 3 секунды.
 - `app/discover.py` — поиск проектов через GitHub API.
 - `app/server.py` — `http.server` для раздачи отчётов.
 - `app/templates/index.html.j2` — Jinja2-шаблон landing-страницы.

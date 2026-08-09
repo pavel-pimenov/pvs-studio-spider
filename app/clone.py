@@ -19,10 +19,17 @@ def clone_or_update(project: Project, src_dir: Path) -> Path:
         run(["git", "-C", str(dest), "pull", "--ff-only"], check=False)
     else:
         log.info("%s: cloning %s (branch %s)", project.slug, project.repo, project.ref)
-        run(
+        proc = run(
             ["git", "clone", "--depth", "1", "--single-branch", "--branch", project.ref, project.repo, str(dest)],
-            check=True,
+            check=False,
         )
+        if proc.returncode != 0:
+            log.warning(
+                "%s: branch %r not found, falling back to the default branch",
+                project.slug,
+                project.ref,
+            )
+            run(["git", "clone", "--depth", "1", project.repo, str(dest)], check=True)
     return dest
 
 

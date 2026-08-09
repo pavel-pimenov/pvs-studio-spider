@@ -3,6 +3,8 @@ from __future__ import annotations
 import datetime as dt
 import json
 import logging
+import os
+import shutil
 from collections import Counter
 from pathlib import Path
 
@@ -26,10 +28,23 @@ def _find_index(report_dir: Path) -> str | None:
     return None
 
 
+def _dedup_jquery(report_dir: Path, shared_dir: Path) -> None:
+    """Share the jQuery copy between all reports via a hardlink to one file."""
+    jq = report_dir / "jquery-3.5.1.min.js"
+    if not jq.exists():
+        return
+    shared_dir.mkdir(parents=True, exist_ok=True)
+    shared = shared_dir / jq.name
+    if not shared.exists():
+        shutil.copy2(jq, shared)
+    jq.unlink()
+    os.link(shared, jq)
+
+
 def convert(project: Project, plog: Path, cfg: Config) -> dict:
     """Convert a .plog report into an interactive HTML report and JSON stats."""
     report_dir = cfg.reports_dir / project.slug
-    report_dir.mkdir(parents=True, exist_ok=True)
+    shutil.rmtree(report_dir, ignore_errors=True)
 
     fullhtml = [
         "plog-converter",
@@ -39,6 +54,7 @@ def convert(project: Project, plog: Path, cfg: Config) -> dict:
         str(plog),
     ]
     run(fullhtml, check=False)
+    _dedup_jquery(report_dir, cfg.reports_dir / "static")
 
     json_path = cfg.reports_dir / f"{project.slug}.json"
     to_json = [
@@ -89,8 +105,8 @@ def parse_json(path: Path) -> dict:
     }
 
 
-def generate_index(cfg: Config, results: list[tuple[Project, dict]]) -> None:
-    """Write the landing page that links every project report."""
+def render_portal(cfg: Config) -> None:
+    """Write the portal shell; the sidebar is populated live from status.json."""
     from jinja2 import Environment, FileSystemLoader, select_autoescape
 
     template_dir = Path(__file__).parent / "templates"
@@ -100,33 +116,12 @@ def generate_index(cfg: Config, results: list[tuple[Project, dict]]) -> None:
     )
     template = env.get_template("index.html.j2")
 
-    rows = []
-    for project, stats in results:
-        rows.append(
-            {
-                "slug": project.slug,
-                "name": project.name,
-                "description": project.description,
-                "repo_url": project.repo_url,
-                "ref": project.ref,
-                "commit": stats.get("commit", ""),
-                "report": stats.get("report") or "",
-                "analyzed_at": stats.get("analyzed_at", ""),
-                "total": stats.get("total", 0),
-                "high": stats.get("levels", {}).get("High", 0),
-                "medium": stats.get("levels", {}).get("Medium", 0),
-                "low": stats.get("levels", {}).get("Low", 0),
-                "top_codes": stats.get("by_code", [])[:8],
-            }
-        )
-
     html = template.render(
-        rows=rows,
         generated_at=dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
     )
     index_path = cfg.reports_dir / "index.html"
     index_path.write_text(html, encoding="utf-8")
-    log.info("landing page written to %s", index_path)
+    log.info("portal page written to %s", index_path)
 
 
 def write_links(cfg: Config, results: list[tuple[Project, dict]]) -> None:

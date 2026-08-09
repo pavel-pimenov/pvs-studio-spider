@@ -5,7 +5,7 @@
 #
 #   /data/src     - cloned git repositories
 #   /data/work    - temporary build directories (compile_commands.json)
-#   /data/reports - analysis reports (plog, json, html) + index.html + links.txt
+#   /data/reports - analysis reports (plog, json, html) + index.html + status.json
 
 jobs: 4
 # Warnings groups to keep. GA:1,2,3 = all General Analysis levels.
@@ -14,28 +14,93 @@ convert_groups: "GA:1,2,3"
 base_url: "http://localhost:8000"
 
 projects:
-  - name: fmt
-    repo: https://github.com/fmtlib/fmt.git
-    ref: main
-    description: "Modern formatting library for C++"
+  - name: jsoncpp
+    repo: https://github.com/open-source-parsers/jsoncpp.git
+    ref: master
+    description: "JSON parser and writer for C++"
 
-  - name: spdlog
-    repo: https://github.com/gabime/spdlog.git
-    ref: v1.x
-    description: "Fast C++ logging library"
-    cmake_options:
-      - -DSPDLOG_BUILD_EXAMPLE=OFF
-      - -DSPDLOG_BUILD_TESTS=OFF
-      - -DSPDLOG_BUILD_BENCH=OFF
-      - -DSPDLOG_BUILD_EXAMPLE_HO=OFF
-
-  - name: benchmark
-    repo: https://github.com/google/benchmark.git
+  - name: leveldb
+    repo: https://github.com/google/leveldb.git
     ref: main
-    description: "Google microbenchmark support library"
+    description: "Fast key-value storage library (C++)"
     cmake_options:
-      - -DBENCHMARK_ENABLE_TESTING=OFF
-      - -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
+      - -DLEVELDB_BUILD_TESTS=OFF
+      - -DLEVELDB_BUILD_BENCHMARKS=OFF
+
+  - name: GameNetworkingSockets
+    repo: https://github.com/ValveSoftware/GameNetworkingSockets.git
+    ref: master
+    description: "Reliable/unreliable messaging over UDP (C++)"
+
+  - name: airdc
+    repo: https://github.com/airdcpp/airdcpp-core.git
+    ref: master
+    description: "Cross-platform core library for AirDC++"
+
+  - name: civetweb
+    repo: https://github.com/civetweb/civetweb.git
+    ref: master
+    description: "Embedded C/C++ web server"
+
+  - name: cppcheck
+    repo: https://github.com/danmar/cppcheck.git
+    ref: main
+    description: "Static analysis tool for C/C++"
+
+  - name: cppkafka
+    repo: https://github.com/mfontanini/cppkafka.git
+    ref: master
+    description: "C++ client for Apache Kafka"
+
+  - name: ecal
+    repo: https://github.com/eclipse-ecal/ecal.git
+    ref: master
+    description: "eCAL - high performance communication layer"
+
+  - name: far2l
+    repo: https://github.com/elfmz/far2l.git
+    ref: master
+    description: "Linux port of FAR v2 file manager"
+
+  - name: farmanager
+    repo: https://github.com/FarGroup/FarManager.git
+    ref: master
+    description: "File and Archive Manager (Windows)"
+
+  - name: fluent-bit
+    repo: https://github.com/fluent/fluent-bit.git
+    ref: master
+    description: "Fast log and metrics processor"
+
+  - name: flylinkdc-hub
+    repo: https://github.com/pavel-pimenov/flylinkdc-hub.git
+    ref: master
+    description: "DC++ hub server (dc.fly-server.ru)"
+
+  - name: haproxy
+    repo: https://github.com/haproxy/haproxy.git
+    ref: master
+    description: "HAProxy load balancer"
+
+  - name: libmdbx
+    repo: https://github.com/isar/libmdbx.git
+    ref: master
+    description: "Fast embedded key-value store (MDBX)"
+
+  - name: librats
+    repo: https://github.com/librats/librats.git
+    ref: master
+    description: "High-performance lightweight P2P library"
+
+  - name: librdkafka
+    repo: https://github.com/confluentinc/librdkafka.git
+    ref: master
+    description: "Apache Kafka C/C++ library"
+
+  - name: libtorrent
+    repo: https://github.com/arvidn/libtorrent.git
+    ref: RC_2_1
+    description: "Efficient C++ bittorrent implementation"
 
   - name: libzmq
     repo: https://github.com/zeromq/libzmq.git
@@ -47,11 +112,57 @@ projects:
       - -DWITH_DOCS=OFF
       - -DWITH_PERF_TOOL=OFF
 
-  - name: catch2
-    repo: https://github.com/catchorg/Catch2.git
-    ref: devel
-    description: "C++ test framework"
-    cmake_options:
-      - -DCATCH_BUILD_TESTING=OFF
-      - -DCATCH_BUILD_EXAMPLES=OFF
-      - -DCATCH_BUILD_EXTRA_TESTS=OFF
+  - name: lighttpd
+    repo: https://github.com/lighttpd/lighttpd1.4.git
+    ref: master
+    description: "lighttpd web server (C)"
+
+  - name: mediainfo
+    repo: https://github.com/MediaArea/MediaInfo.git
+    ref: master
+    description: "Technical and tag information viewer"
+
+  - name: mpc-be-core
+    repo: https://github.com/Aleksoid1978/MPC-BE.git
+    ref: master
+    description: "Media Player Classic - BE (core)"
+
+  - name: mtproxy
+    repo: https://github.com/TelegramMessenger/MTProxy.git
+    ref: master
+    description: "MTProxy for Telegram (C)"
+
+  - name: open62541
+    repo: https://github.com/open62541/open62541.git
+    ref: master
+    description: "OPC UA implementation (C)"
+
+  - name: rapidjson
+    repo: https://github.com/Tencent/rapidjson.git
+    ref: master
+    description: "Fast JSON parser/generator for C++"
+
+  - name: verlihub
+    repo: https://github.com/Verlihub/verlihub.git
+    ref: master
+    description: "Verlihub DC++ hub software (C++)"
+
+  - name: wolfssl
+    repo: https://github.com/wolfSSL/wolfssl.git
+    ref: master
+    description: "TLS/SSL library written in C"
+
+  - name: wxWidgets
+    repo: https://github.com/wxWidgets/wxWidgets.git
+    ref: master
+    description: "Cross-platform C++ GUI library"
+
+  - name: zlib-ng
+    repo: https://github.com/zlib-ng/zlib-ng.git
+    ref: develop
+    description: "zlib replacement with optimizations"
+
+  - name: zstd
+    repo: https://github.com/facebook/zstd.git
+    ref: dev
+    description: "Zstandard compression (C)"

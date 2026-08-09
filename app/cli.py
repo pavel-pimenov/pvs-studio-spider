@@ -13,6 +13,7 @@ from . import config as config_mod
 from . import discover as discover_mod
 from . import report as report_mod
 from . import server as server_mod
+from . import status as status_mod
 from .config import Config
 
 log = logging.getLogger("spider")
@@ -41,6 +42,10 @@ def cmd_analyze(args) -> int:
 
     analyze_mod.configure_license()
 
+    progress = status_mod.Progress(cfg.reports_dir)
+    progress.prepare(cfg.projects)
+    report_mod.render_portal(cfg)
+
     results: list[tuple] = []
     for project in cfg.projects:
         if not project.enabled:
@@ -48,10 +53,15 @@ def cmd_analyze(args) -> int:
             continue
         log.info("=== %s ===", project.slug)
         try:
+            progress.set(project.slug, "cloning", "clone / update repository")
             src = clone_mod.clone_or_update(project, cfg.src_dir)
+            progress.set(project.slug, "building", "cmake configure + build")
             compile_db = analyze_mod.build_project(project, cfg)
+            progress.set(project.slug, "analyzing", "pvs-studio-analyzer")
             plog = analyze_mod.run_pvs(project, compile_db, cfg)
+            progress.set(project.slug, "converting", "plog-converter fullhtml/json")
             stats = report_mod.convert(project, plog, cfg)
+            progress.set(project.slug, "done", "analyzed", stats=stats)
             log.info(
                 "%s: %d warnings (%d high, %d medium, %d low)",
                 project.slug,
@@ -62,9 +72,9 @@ def cmd_analyze(args) -> int:
             )
             results.append((project, stats))
         except Exception as exc:
+            progress.set(project.slug, "failed", str(exc))
             log.error("%s: analysis failed: %s", project.slug, exc, exc_info=args.verbose)
 
-    report_mod.generate_index(cfg, results)
     report_mod.write_links(cfg, results)
     log.info("done. %d/%d projects analyzed", len(results), len(cfg.projects))
     return 0

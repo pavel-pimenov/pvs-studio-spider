@@ -101,8 +101,8 @@ projects:
     enabled: true
 ```
 
-В конфиге по умолчанию — пять проверенных проектов: **fmt**, **spdlog**,
-**benchmark**, **libzmq**, **Catch2**.
+В конфиге по умолчанию — пара небольших проектов: **jsoncpp** и **mongoose**
+(CMake, быстро собираются).
 
 ### Как работает сборка и анализ
 
@@ -152,7 +152,7 @@ cat candidates.json     # или откройте на хосте
 ## Структура репозитория
 
 ```
-├── Dockerfile            # образ с Ubuntu 24.04 + PVS-Studio + toolchain
+├── Dockerfile            # образ с Ubuntu 26.04 + PVS-Studio + toolchain
 ├── docker-compose.yml    # сервисы spider (анализ) и report-server (раздача)
 ├── projects.yaml         # список проектов и параметров анализа
 ├── .env.example          # шаблон переменных окружения (лицензия и пр.)
@@ -172,7 +172,7 @@ cat candidates.json     # или откройте на хосте
 
 - **`No compilation units found`** — проект не собрался или `compile_commands.json`
   пуст. Смотрите лог сборки (`--verbose`). Убедитесь, что проект собирается на
-  Ubuntu 24.04 и не требует дополнительных системных пакетов (в этом случае
+  Ubuntu 26.04 и не требует дополнительных системных пакетов (в этом случае
   добавьте их в `Dockerfile`).
 - **`pvs-studio-analyzer` не находит лицензию** — проверьте `PVS_USERNAME`/`PVS_KEY`
   в `.env`. Если используется файл лицензии, укажите `PVS_STUDIO_LICENSE`.

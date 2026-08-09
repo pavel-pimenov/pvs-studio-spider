@@ -12,14 +12,8 @@ log = logging.getLogger("spider.analyze")
 
 
 def configure_license() -> None:
-    """Enter the PVS-Studio license using credentials or a license file."""
-    username = os.environ.get("PVS_USERNAME")
-    key = os.environ.get("PVS_KEY")
-    if username and key:
-        log.info("configuring PVS-Studio credentials")
-        run(["pvs-studio-analyzer", "credentials", username, key], check=False)
-        return
-
+    """Make the PVS-Studio license available: credentials, explicit file, or the
+    default location (~/.config/PVS-Studio/PVS-Studio.lic)."""
     license_path = os.environ.get("PVS_STUDIO_LICENSE")
     if license_path:
         resolved = Path(license_path).expanduser().resolve()
@@ -29,9 +23,23 @@ def configure_license() -> None:
         os.environ["PVS_STUDIO_LICENSE"] = str(resolved)
         return
 
+    default_lic = Path.home() / ".config" / "PVS-Studio" / "PVS-Studio.lic"
+    if default_lic.exists():
+        log.info("using license file at %s", default_lic)
+        os.environ["PVS_STUDIO_LICENSE"] = str(default_lic)
+        return
+
+    username = os.environ.get("PVS_USERNAME")
+    key = os.environ.get("PVS_KEY")
+    if username and key:
+        log.info("configuring PVS-Studio credentials")
+        run(["pvs-studio-analyzer", "credentials", username, key], check=False)
+        return
+
     log.warning(
-        "no license configured (PVS_USERNAME/PVS_KEY or PVS_STUDIO_LICENSE). "
-        "The analyzer may run in trial mode or fail."
+        "no license configured (PVS_USERNAME/PVS_KEY, PVS_STUDIO_LICENSE, "
+        "or ~/.config/PVS-Studio/PVS-Studio.lic). The analyzer may run in "
+        "trial mode or fail."
     )
 
 

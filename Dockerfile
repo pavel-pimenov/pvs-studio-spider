@@ -1,6 +1,4 @@
-# 24.04 chosen because the official ubuntu:26.04 tag was broken (exec format
-# error) when this image was authored; bump to 26.04 once the tag is fixed.
-ARG BASE=ubuntu:24.04
+ARG BASE=ubuntu:26.04
 FROM ${BASE}
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -21,6 +19,18 @@ RUN apt-get update \
         ninja-build \
         pkg-config \
         bear \
+        libtool \
+        autoconf \
+        automake \
+        libssl-dev \
+        libcurl4-openssl-dev \
+        libboost-dev \
+        libz-dev \
+        libsqlite3-dev \
+        libpcre2-dev \
+        libprotobuf-dev \
+        protobuf-compiler \
+        libevent-dev \
         python3 \
         python3-pip \
         python3-venv \

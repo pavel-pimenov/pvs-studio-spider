@@ -7,78 +7,224 @@
 <style>
   :root { color-scheme: light dark; }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    margin: 0; padding: 2rem 1.5rem; line-height: 1.5;
-    background: #101418; color: #e6e6e6;
+    margin: 0; color: #e6e6e6; background: #101418;
+    display: flex; height: 100vh;
   }
-  main { max-width: 960px; margin: 0 auto; }
-  h1 { margin-top: 0; }
-  .meta { color: #9aa4b2; font-size: .9rem; margin-bottom: 1.5rem; }
-  table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-  th, td { text-align: left; padding: .6rem .75rem; border-bottom: 1px solid #2a3140; vertical-align: top; }
-  th { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: #9aa4b2; }
-  tr:hover td { background: #171d26; }
-  .badge { display: inline-block; min-width: 2.2em; text-align: center; padding: .1rem .4rem;
-    border-radius: 6px; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  aside {
+    width: 310px; min-width: 310px; overflow-y: auto;
+    background: #0b0e12; border-right: 1px solid #2a3140;
+    padding: 1rem 0.75rem;
+  }
+  aside h1 { font-size: 1.05rem; margin: 0 0 .25rem; }
+  aside .meta { color: #9aa4b2; font-size: .78rem; margin: 0 0 .6rem; line-height: 1.4; }
+  .controls { display: flex; flex-direction: column; gap: .45rem; margin-bottom: .7rem; }
+  #search, #filter {
+    width: 100%; padding: .45rem .6rem; font-size: .85rem; color: #e6e6e6;
+    background: #171d26; border: 1px solid #2a3140; border-radius: 8px; outline: none;
+  }
+  #search:focus, #filter:focus { border-color: #3b82c4; }
+  .overview { margin: 0 0 1rem; }
+  .bar { height: 6px; background: #1c2533; border-radius: 4px; overflow: hidden; }
+  .bar > div { height: 100%; background: #3b82c4; width: 0; transition: width .4s; }
+  .ov-text { color: #9aa4b2; font-size: .75rem; margin-top: .3rem; }
+  nav { display: flex; flex-direction: column; gap: .4rem; }
+  .project {
+    display: block; padding: .55rem .6rem; border-radius: 8px;
+    border: 1px solid transparent; color: inherit; text-decoration: none;
+  }
+  .project:hover { background: #171d26; }
+  .project.active { background: #1c2533; border-color: #3b82c4; }
+  .project .name { font-weight: 600; }
+  .project .desc { color: #9aa4b2; font-size: .78rem; margin-top: .1rem; }
+  .project .foot { display: flex; align-items: center; gap: .5rem; margin-top: .3rem; }
+  .project .commit { font-family: ui-monospace, monospace; font-size: .72rem; color: #9aa4b2; }
+  .project .state { font-size: .72rem; margin-left: auto; color: #9aa4b2; }
+  .project.inprogress .state { color: #7dd3fc; }
+  .project.failed .state { color: #f87171; }
+  .project.done .state { color: #34d399; }
+  .project.pending { opacity: .55; }
+  .project.skipped { opacity: .45; }
+  .badges { margin-top: .3rem; display: flex; gap: .35rem; flex-wrap: wrap; }
+  .badge { display: inline-block; min-width: 2em; text-align: center; padding: .05rem .35rem;
+    border-radius: 6px; font-size: .75rem; font-variant-numeric: tabular-nums; }
   .b-high { background: #7f1d1d; color: #fecaca; }
   .b-med  { background: #78350f; color: #fed7aa; }
   .b-low  { background: #1e3a8a; color: #bfdbfe; }
   .b-total{ background: #134e4a; color: #99f6e4; }
-  .repo { color: #7dd3fc; text-decoration: none; word-break: break-all; }
-  .commit { font-family: ui-monospace, monospace; font-size: .85rem; color: #9aa4b2; }
-  .codes { font-family: ui-monospace, monospace; font-size: .8rem; color: #c4b5fd; }
-  .empty { color: #9aa4b2; }
+  .spinner {
+    display: inline-block; width: .7rem; height: .7rem; border-radius: 50%;
+    border: 2px solid #3b82c4; border-top-color: transparent;
+    animation: spin .8s linear infinite; vertical-align: -1px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  #welcome { margin: auto; max-width: 480px; text-align: center; color: #9aa4b2; padding: 2rem; }
+  #welcome code { background: #1c2533; padding: .1rem .35rem; border-radius: 4px; }
+  #frame { flex: 1; width: 100%; border: 0; background: #fff; display: none; }
+  #hint { color: #9aa4b2; font-size: .8rem; padding: .5rem 1rem; border-bottom: 1px solid #2a3140; }
 </style>
 </head>
 <body>
-<main>
+<aside>
   <h1>PVS-Studio Spider</h1>
   <p class="meta">
     Static analysis of open-source C/C++ projects with
-    <a class="repo" href="https://pvs-studio.com/">PVS-Studio</a>.
-    Generated at {{ generated_at }} (UTC).
+    <a href="https://pvs-studio.com/" style="color:#7dd3fc;">PVS-Studio</a>.
   </p>
-
-  {% if rows %}
-  <table>
-    <thead>
-      <tr>
-        <th>Project</th>
-        <th>Warnings</th>
-        <th>High</th>
-        <th>Medium</th>
-        <th>Low</th>
-        <th>Top diagnostics</th>
-      </tr>
-    </thead>
-    <tbody>
-    {% for r in rows %}
-      <tr>
-        <td>
-          <strong>{{ r.name }}</strong><br>
-          <span class="meta">{{ r.description }}</span><br>
-          <a class="repo" href="{{ r.repo_url }}">{{ r.repo_url }}</a><br>
-          <span class="commit">{{ r.ref }} @ {{ r.commit }}</span>
-          {% if r.report %}
-          <br><a class="repo" href="{{ r.slug }}/{{ r.report }}">open report &rarr;</a>
-          {% endif %}
-        </td>
-        <td><span class="badge b-total">{{ r.total }}</span></td>
-        <td><span class="badge b-high">{{ r.high }}</span></td>
-        <td><span class="badge b-med">{{ r.medium }}</span></td>
-        <td><span class="badge b-low">{{ r.low }}</span></td>
-        <td class="codes">
-          {% for code, count in r.top_codes %}{{ code }} ({{ count }})
-          {%- if not loop.last %}<br>{% endif %}{% endfor %}
-        </td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <p class="empty">No reports yet. Run <code>docker compose run --rm spider analyze</code>.</p>
-  {% endif %}
+  <div class="controls">
+    <input id="search" type="search" placeholder="Search projects…" autocomplete="off">
+    <select id="filter">
+      <option value="all">All</option>
+      <option value="active">In progress</option>
+      <option value="done">Analyzed</option>
+      <option value="failed">Failed</option>
+      <option value="queued">Queued</option>
+    </select>
+  </div>
+  <div class="overview">
+    <div class="bar"><div id="barfill"></div></div>
+    <div class="ov-text" id="ovtext">loading…</div>
+  </div>
+  <nav id="projects"></nav>
+</aside>
+<main>
+  <div id="hint">Select a project in the sidebar to view its report.</div>
+  <div id="welcome">
+    No reports yet.<br><br>
+    Run <code>docker compose run --rm spider analyze</code> to start, or wait for a
+    running analysis — this page updates automatically.
+  </div>
+  <iframe id="frame"></iframe>
 </main>
+<script>
+  var nav = document.getElementById('projects');
+  var frame = document.getElementById('frame');
+  var welcome = document.getElementById('welcome');
+  var barfill = document.getElementById('barfill');
+  var ovtext = document.getElementById('ovtext');
+  var hint = document.getElementById('hint');
+  var search = document.getElementById('search');
+  var filter = document.getElementById('filter');
+  var selected = null;
+  var lastData = null;
+  var lastSig = null;
+
+  var ACTIVE = ['cloning', 'building', 'analyzing', 'converting'];
+  var STATE_RANK = { cloning: 0, building: 0, analyzing: 0, converting: 0,
+                     done: 1, failed: 2, pending: 3, skipped: 4 };
+
+  function openReport(slug, report) {
+    if (!report) return;
+    selected = slug;
+    frame.src = slug + '/' + report;
+    frame.style.display = 'block';
+    welcome.style.display = 'none';
+    hint.style.display = 'block';
+    document.querySelectorAll('.project').forEach(function (node) {
+      node.classList.toggle('active', node.getAttribute('data-slug') === slug);
+    });
+  }
+
+  function stateMatch(state, f) {
+    if (f === 'active') return ACTIVE.indexOf(state) >= 0;
+    if (f === 'done') return state === 'done';
+    if (f === 'failed') return state === 'failed';
+    if (f === 'queued') return state === 'pending';
+    return true;
+  }
+
+  function itemHtml(p) {
+    var badges = '';
+    if (p.stats) {
+      var lv = p.stats.levels || {};
+      badges =
+        '<span class="badge b-total">' + p.stats.total + '</span>' +
+        '<span class="badge b-high">H ' + lv.High + '</span>' +
+        '<span class="badge b-med">M ' + lv.Medium + '</span>' +
+        '<span class="badge b-low">L ' + lv.Low + '</span>';
+    }
+    var stateHtml;
+    if (p.state === 'done') stateHtml = '<span class="state">analyzed</span>';
+    else if (p.state === 'failed') stateHtml = '<span class="state" title="' + p.message.replace(/"/g, '&quot;') + '">failed</span>';
+    else if (p.state === 'pending') stateHtml = '<span class="state">queued</span>';
+    else if (p.state === 'skipped') stateHtml = '<span class="state">skipped</span>';
+    else stateHtml = '<span class="spinner"></span> <span class="state">' + (p.message || p.state) + '</span>';
+    return '<div class="name">' + p.name + '</div>' +
+      (p.description ? '<div class="desc">' + p.description + '</div>' : '') +
+      badges +
+      '<div class="foot"><span class="commit">' + p.ref + ' @ ' + (p.commit || '—') + '</span>' + stateHtml + '</div>';
+  }
+
+  function render(data) {
+    lastData = data;
+    var projects = data && data.projects ? data.projects : {};
+    var slugs = Object.keys(projects);
+    if (!slugs.length) return;
+
+    var total = slugs.length, done = 0;
+    slugs.forEach(function (slug) {
+      if (projects[slug].state === 'done') done++;
+    });
+    barfill.style.width = total ? Math.round(done / total * 100) + '%' : '0%';
+    ovtext.textContent = done + '/' + total + ' projects analyzed';
+
+    var q = search.value.toLowerCase().trim();
+    var f = filter.value;
+    var items = slugs
+      .filter(function (slug) {
+        var p = projects[slug];
+        if (!stateMatch(p.state, f)) return false;
+        if (q && (p.name + ' ' + (p.description || '')).toLowerCase().indexOf(q) < 0) return false;
+        return true;
+      })
+      .sort(function (a, b) {
+        return STATE_RANK[projects[a].state] - STATE_RANK[projects[b].state];
+      });
+
+    var sig = items.map(function (s) {
+      var p = projects[s];
+      return s + '|' + p.state + '|' + (p.stats ? p.stats.total : '-') + '|' + (p.commit || '');
+    }).join('~');
+    if (sig === lastSig) return;
+    lastSig = sig;
+
+    nav.innerHTML = '';
+    items.forEach(function (slug) {
+      var p = projects[slug];
+      var el = document.createElement('a');
+      el.className = 'project ' + p.state;
+      el.setAttribute('data-slug', slug);
+      el.innerHTML = itemHtml(p);
+      if (p.state === 'done' && p.report) {
+        el.setAttribute('href', slug + '/' + p.report);
+        el.addEventListener('click', function (e) {
+          e.preventDefault();
+          openReport(slug, p.report);
+        });
+      }
+      nav.appendChild(el);
+    });
+
+    if (selected && projects[selected] && projects[selected].state === 'done' && projects[selected].report) {
+      frame.src = selected + '/' + projects[selected].report;
+    }
+  }
+
+  function poll() {
+    fetch('status.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(render)
+      .catch(function () {});
+  }
+
+  search.addEventListener('input', function () { lastSig = null; render(lastData); });
+  filter.addEventListener('change', function () { lastSig = null; render(lastData); });
+
+  poll();
+  setInterval(poll, 3000);
+</script>
 </body>
 </html>
