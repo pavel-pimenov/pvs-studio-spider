@@ -6,6 +6,7 @@ services:
     command: analyze
     volumes:
       - ./data:/data
+      - ${SPIDER_REPORTS_DIR:-/var/www/pvs-studio}:/var/www/pvs-studio
       - ./projects.yaml:/app/projects.yaml:ro
       - ~/.config/PVS-Studio:/root/.config/PVS-Studio:ro
     environment:
@@ -16,23 +17,8 @@ services:
     command: serve
     restart: unless-stopped
     volumes:
-      - ./data:/data:ro
+      - ${SPIDER_REPORTS_DIR:-/var/www/pvs-studio}:/var/www/pvs-studio:ro
     environment:
-      - SPIDER_REPORTS_DIR=/data/reports
+      - SPIDER_REPORTS_DIR=${SPIDER_REPORTS_DIR:-/var/www/pvs-studio}
 
-  caddy:
-    image: caddy:2
-    restart: unless-stopped
-    ports:
-      - "${SPIDER_HTTPS_PORT:-443}:443"
-      - "80:80"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    environment:
-      - CADDY_DOMAIN=${CADDY_DOMAIN:-localhost}
 
-volumes:
-  caddy_data:
-  caddy_config:

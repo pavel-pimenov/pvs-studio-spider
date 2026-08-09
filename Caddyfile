@@ -1,4 +1,0 @@
-{$CADDY_DOMAIN} {
-	tls internal
-	reverse_proxy report-server:8000
-}
