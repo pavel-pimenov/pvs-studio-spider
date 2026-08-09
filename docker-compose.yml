@@ -15,9 +15,24 @@ services:
     image: pvs-studio-spider
     command: serve
     restart: unless-stopped
-    ports:
-      - "${SPIDER_PORT:-8000}:8000"
     volumes:
       - ./data:/data:ro
     environment:
       - SPIDER_REPORTS_DIR=/data/reports
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "${SPIDER_HTTPS_PORT:-443}:443"
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      - CADDY_DOMAIN=${CADDY_DOMAIN:-localhost}
+
+volumes:
+  caddy_data:
+  caddy_config:

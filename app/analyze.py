@@ -90,6 +90,14 @@ def build_project(project: Project, cfg: Config) -> Path:
     return compile_db
 
 
+def clean_build(project: Project, cfg: Config) -> None:
+    """Remove the project build directory to free disk space."""
+    build = cfg.work_dir / project.slug / project.build_dir
+    if build.exists():
+        shutil.rmtree(build, ignore_errors=True)
+        log.info("%s: removed build dir %s", project.slug, build)
+
+
 def run_pvs(project: Project, compile_db: Path, cfg: Config) -> Path:
     """Run the PVS-Studio analyzer over the compile database."""
     plog = cfg.reports_dir / f"{project.slug}.plog"

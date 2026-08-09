@@ -48,7 +48,8 @@ class Config:
         src_dir = Path(raw.get("src_dir", env.get("SPIDER_SRC_DIR", DEFAULT_ROOT / "src")))
         work_dir = Path(raw.get("work_dir", env.get("SPIDER_WORK_DIR", DEFAULT_ROOT / "work")))
         reports_dir = Path(raw.get("reports_dir", env.get("SPIDER_REPORTS_DIR", DEFAULT_ROOT / "reports")))
-        jobs = int(raw.get("jobs", env.get("SPIDER_JOBS", 4)))
+        default_jobs = max(1, (os.cpu_count() or 2) - 2)
+        jobs = int(raw.get("jobs", env.get("SPIDER_JOBS", default_jobs)))
         convert_groups = str(raw.get("convert_groups", env.get("SPIDER_CONVERT_GROUPS", "GA:1,2,3")))
         base_url = str(raw.get("base_url", env.get("SPIDER_BASE_URL", "http://localhost:8000"))).rstrip("/")
 

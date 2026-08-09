@@ -63,7 +63,6 @@ WORKDIR /app
 ENV SPIDER_SRC_DIR=/data/src
 ENV SPIDER_WORK_DIR=/data/work
 ENV SPIDER_REPORTS_DIR=/data/reports
-ENV SPIDER_JOBS=4
 
 VOLUME ["/data"]
 

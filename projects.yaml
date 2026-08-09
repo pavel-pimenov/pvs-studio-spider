@@ -7,8 +7,8 @@
 #   /data/work    - temporary build directories (compile_commands.json)
 #   /data/reports - analysis reports (plog, json, html) + index.html + status.json
 
-jobs: 4
-# Warnings groups to keep. GA:1,2,3 = all General Analysis levels.
+# Number of parallel jobs is auto-detected: all node cores minus 2 reserved
+# for the system. Override per-project or globally via `jobs:` / SPIDER_JOBS.
 convert_groups: "GA:1,2,3"
 # Base URL used when generating shareable links for developers.
 base_url: "http://localhost:8000"

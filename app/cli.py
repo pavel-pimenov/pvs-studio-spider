@@ -74,6 +74,8 @@ def cmd_analyze(args) -> int:
         except Exception as exc:
             progress.set(project.slug, "failed", str(exc))
             log.error("%s: analysis failed: %s", project.slug, exc, exc_info=args.verbose)
+        finally:
+            analyze_mod.clean_build(project, cfg)
 
     report_mod.write_links(cfg, results)
     log.info("done. %d/%d projects analyzed", len(results), len(cfg.projects))
