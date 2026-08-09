@@ -1,0 +1,22 @@
+services:
+  spider:
+    build: .
+    image: pvs-studio-spider
+    env_file: .env
+    command: analyze
+    volumes:
+      - ./data:/data
+      - ./projects.yaml:/app/projects.yaml:ro
+    environment:
+      - SPIDER_CONFIG=/app/projects.yaml
+
+  report-server:
+    image: pvs-studio-spider
+    command: serve
+    restart: unless-stopped
+    ports:
+      - "${SPIDER_PORT:-8000}:8000"
+    volumes:
+      - ./data:/data:ro
+    environment:
+      - SPIDER_REPORTS_DIR=/data/reports

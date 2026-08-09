@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PVS-Studio Spider — C/C++ analysis reports</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    margin: 0; padding: 2rem 1.5rem; line-height: 1.5;
+    background: #101418; color: #e6e6e6;
+  }
+  main { max-width: 960px; margin: 0 auto; }
+  h1 { margin-top: 0; }
+  .meta { color: #9aa4b2; font-size: .9rem; margin-bottom: 1.5rem; }
+  table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+  th, td { text-align: left; padding: .6rem .75rem; border-bottom: 1px solid #2a3140; vertical-align: top; }
+  th { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: #9aa4b2; }
+  tr:hover td { background: #171d26; }
+  .badge { display: inline-block; min-width: 2.2em; text-align: center; padding: .1rem .4rem;
+    border-radius: 6px; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  .b-high { background: #7f1d1d; color: #fecaca; }
+  .b-med  { background: #78350f; color: #fed7aa; }
+  .b-low  { background: #1e3a8a; color: #bfdbfe; }
+  .b-total{ background: #134e4a; color: #99f6e4; }
+  .repo { color: #7dd3fc; text-decoration: none; word-break: break-all; }
+  .commit { font-family: ui-monospace, monospace; font-size: .85rem; color: #9aa4b2; }
+  .codes { font-family: ui-monospace, monospace; font-size: .8rem; color: #c4b5fd; }
+  .empty { color: #9aa4b2; }
+</style>
+</head>
+<body>
+<main>
+  <h1>PVS-Studio Spider</h1>
+  <p class="meta">
+    Static analysis of open-source C/C++ projects with
+    <a class="repo" href="https://pvs-studio.com/">PVS-Studio</a>.
+    Generated at {{ generated_at }} (UTC).
+  </p>
+
+  {% if rows %}
+  <table>
+    <thead>
+      <tr>
+        <th>Project</th>
+        <th>Warnings</th>
+        <th>High</th>
+        <th>Medium</th>
+        <th>Low</th>
+        <th>Top diagnostics</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for r in rows %}
+      <tr>
+        <td>
+          <strong>{{ r.name }}</strong><br>
+          <span class="meta">{{ r.description }}</span><br>
+          <a class="repo" href="{{ r.repo_url }}">{{ r.repo_url }}</a><br>
+          <span class="commit">{{ r.ref }} @ {{ r.commit }}</span>
+          {% if r.report %}
+          <br><a class="repo" href="{{ r.slug }}/{{ r.report }}">open report &rarr;</a>
+          {% endif %}
+        </td>
+        <td><span class="badge b-total">{{ r.total }}</span></td>
+        <td><span class="badge b-high">{{ r.high }}</span></td>
+        <td><span class="badge b-med">{{ r.medium }}</span></td>
+        <td><span class="badge b-low">{{ r.low }}</span></td>
+        <td class="codes">
+          {% for code, count in r.top_codes %}{{ code }} ({{ count }})
+          {%- if not loop.last %}<br>{% endif %}{% endfor %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No reports yet. Run <code>docker compose run --rm spider analyze</code>.</p>
+  {% endif %}
+</main>
+</body>
+</html>

@@ -1,0 +1,57 @@
+# PVS-Studio Spider configuration.
+#
+# Every path is resolved inside the container. The whole `/data` directory is
+# bind-mounted to `./data` on the host (see docker-compose.yml).
+#
+#   /data/src     - cloned git repositories
+#   /data/work    - temporary build directories (compile_commands.json)
+#   /data/reports - analysis reports (plog, json, html) + index.html + links.txt
+
+jobs: 4
+# Warnings groups to keep. GA:1,2,3 = all General Analysis levels.
+convert_groups: "GA:1,2,3"
+# Base URL used when generating shareable links for developers.
+base_url: "http://localhost:8000"
+
+projects:
+  - name: fmt
+    repo: https://github.com/fmtlib/fmt.git
+    ref: main
+    description: "Modern formatting library for C++"
+
+  - name: spdlog
+    repo: https://github.com/gabime/spdlog.git
+    ref: v1.x
+    description: "Fast C++ logging library"
+    cmake_options:
+      - -DSPDLOG_BUILD_EXAMPLE=OFF
+      - -DSPDLOG_BUILD_TESTS=OFF
+      - -DSPDLOG_BUILD_BENCH=OFF
+      - -DSPDLOG_BUILD_EXAMPLE_HO=OFF
+
+  - name: benchmark
+    repo: https://github.com/google/benchmark.git
+    ref: main
+    description: "Google microbenchmark support library"
+    cmake_options:
+      - -DBENCHMARK_ENABLE_TESTING=OFF
+      - -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
+
+  - name: libzmq
+    repo: https://github.com/zeromq/libzmq.git
+    ref: master
+    description: "ZeroMQ core messaging engine (C)"
+    cmake_options:
+      - -DBUILD_TESTS=OFF
+      - -DBUILD_SHARED=ON
+      - -DWITH_DOCS=OFF
+      - -DWITH_PERF_TOOL=OFF
+
+  - name: catch2
+    repo: https://github.com/catchorg/Catch2.git
+    ref: devel
+    description: "C++ test framework"
+    cmake_options:
+      - -DCATCH_BUILD_TESTING=OFF
+      - -DCATCH_BUILD_EXAMPLES=OFF
+      - -DCATCH_BUILD_EXTRA_TESTS=OFF
