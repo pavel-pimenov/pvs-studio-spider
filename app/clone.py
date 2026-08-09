@@ -13,10 +13,9 @@ def clone_or_update(project: Project, src_dir: Path) -> Path:
     """Clone the repository or pull the latest changes if it already exists."""
     dest = src_dir / project.slug
     if dest.exists():
-        log.info("%s: updating existing checkout", project.slug)
-        run(["git", "-C", str(dest), "fetch", "--all", "--tags", "--prune"], check=False)
-        run(["git", "-C", str(dest), "checkout", project.ref], check=False)
-        run(["git", "-C", str(dest), "pull", "--ff-only"], check=False)
+        log.info("%s: updating existing checkout (shallow)", project.slug)
+        run(["git", "-C", str(dest), "fetch", "--depth", "1", "origin", project.ref], check=False)
+        run(["git", "-C", str(dest), "checkout", "--force", "FETCH_HEAD"], check=False)
     else:
         log.info("%s: cloning %s (branch %s)", project.slug, project.repo, project.ref)
         proc = run(

@@ -3,7 +3,10 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import shutil
 import sys
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from . import __version__
@@ -13,8 +16,11 @@ from . import config as config_mod
 from . import discover as discover_mod
 from . import report as report_mod
 from . import server as server_mod
+from . import state as state_mod
 from . import status as status_mod
+from . import util
 from .config import Config
+from .util import run
 
 log = logging.getLogger("spider")
 
@@ -33,6 +39,45 @@ def _load_config(args) -> Config:
     return Config.load(args.config)
 
 
+RESERVED_REPORTS = {"index.html", "links.txt", "status.json", "metrics.json"}
+
+
+def _dir_bytes(path: Path) -> int:
+    """Total size of a file or directory in bytes (du -sb, 0 if absent)."""
+    if not path.exists():
+        return 0
+    proc = run(["du", "-sb", str(path)], check=False)
+    try:
+        return int(proc.stdout.split(maxsplit=1)[0])
+    except (ValueError, IndexError):
+        return 0
+
+
+def prune_orphans(cfg: Config) -> None:
+    """Remove reports, sources and build dirs of projects no longer in the config."""
+    slugs = {p.slug for p in cfg.projects}
+    for base, kind in ((cfg.src_dir, "sources"), (cfg.work_dir, "build dirs")):
+        if not base.exists():
+            continue
+        for path in sorted(base.iterdir()):
+            if path.is_dir() and path.name not in slugs:
+                shutil.rmtree(path, ignore_errors=True)
+                log.info("pruned stale %s: %s", kind, path)
+    if not cfg.reports_dir.exists():
+        return
+    for path in sorted(cfg.reports_dir.iterdir()):
+        name = path.name
+        if name in RESERVED_REPORTS:
+            continue
+        if path.is_file() and name.endswith((".plog", ".json")):
+            if name.rsplit(".", 1)[0] not in slugs:
+                path.unlink(missing_ok=True)
+                log.info("pruned stale report: %s", path)
+        elif path.is_dir() and name not in slugs and report_mod.is_report_dir(path):
+            shutil.rmtree(path, ignore_errors=True)
+            log.info("pruned stale report dir: %s", path)
+
+
 def cmd_analyze(args) -> int:
     _setup_logging(args.verbose)
     cfg = _load_config(args)
@@ -41,26 +86,46 @@ def cmd_analyze(args) -> int:
     cfg.reports_dir.mkdir(parents=True, exist_ok=True)
 
     analyze_mod.configure_license()
+    prune_orphans(cfg)
 
     progress = status_mod.Progress(cfg.reports_dir)
     progress.prepare(cfg.projects)
     report_mod.render_portal(cfg)
+    revisions = state_mod.load_revisions(cfg.revisions_file)
+    metrics = state_mod.load_metrics(cfg.reports_dir / "metrics.json")
 
-    results: list[tuple] = []
-    for project in cfg.projects:
-        if not project.enabled:
-            log.info("%s: skipped (disabled in config)", project.slug)
-            continue
+    def worker(project: Project) -> tuple[Project, dict | None, dict | None, str | None]:
         log.info("=== %s ===", project.slug)
+        wall_start = time.perf_counter()
+        cpu_start = util.thread_cpu()
         try:
             progress.set(project.slug, "cloning", "clone / update repository")
             src = clone_mod.clone_or_update(project, cfg.src_dir)
+            commit = clone_mod.head_commit(src)
+            if not args.force and revisions.get(project.slug) == commit:
+                if report_mod.has_report(project, cfg):
+                    progress.set(project.slug, "skipped", "revision unchanged, report up to date")
+                    log.info("%s: revision %s already analyzed, skipping", project.slug, commit)
+                    return project, report_mod.summarize(project, cfg), None, None
             progress.set(project.slug, "building", "cmake configure + build")
             compile_db = analyze_mod.build_project(project, cfg)
             progress.set(project.slug, "analyzing", "pvs-studio-analyzer")
             plog = analyze_mod.run_pvs(project, compile_db, cfg)
             progress.set(project.slug, "converting", "plog-converter fullhtml/json")
             stats = report_mod.convert(project, plog, cfg)
+            entry = {
+                "commit": commit,
+                "analyzed_at": stats["analyzed_at"],
+                "wall_sec": round(time.perf_counter() - wall_start, 1),
+                "cpu_sec": round(util.thread_cpu() - cpu_start, 1),
+                "disk_bytes": (
+                    _dir_bytes(src)
+                    + _dir_bytes(cfg.work_dir / project.slug)
+                    + _dir_bytes(cfg.reports_dir / f"{project.slug}.plog")
+                    + _dir_bytes(cfg.reports_dir / f"{project.slug}.json")
+                    + _dir_bytes(cfg.reports_dir / project.slug)
+                ),
+            }
             progress.set(project.slug, "done", "analyzed", stats=stats)
             log.info(
                 "%s: %d warnings (%d high, %d medium, %d low)",
@@ -70,13 +135,37 @@ def cmd_analyze(args) -> int:
                 stats["levels"]["Medium"],
                 stats["levels"]["Low"],
             )
-            results.append((project, stats))
+            return project, stats, entry, None
         except Exception as exc:
             progress.set(project.slug, "failed", str(exc))
             log.error("%s: analysis failed: %s", project.slug, exc, exc_info=args.verbose)
+            return project, None, None, str(exc)
         finally:
             analyze_mod.clean_build(project, cfg)
+            analyze_mod.clean_src(project, cfg)
 
+    results: list[tuple] = []
+    with ThreadPoolExecutor(max_workers=cfg.parallel) as pool:
+        futures = {pool.submit(worker, p): p for p in cfg.projects if p.enabled}
+        for future in as_completed(futures):
+            project = futures[future]
+            try:
+                _, stats, entry, error = future.result()
+            except Exception as exc:
+                log.error("%s: worker crashed: %s", project.slug, exc, exc_info=args.verbose)
+                continue
+            if stats is not None:
+                results.append((project, stats))
+            if entry is not None:
+                revisions[project.slug] = entry["commit"]
+                metrics[project.slug] = entry
+                state_mod.save_metrics(cfg.reports_dir / "metrics.json", metrics)
+
+    active = {p.slug for p in cfg.projects if p.enabled}
+    revisions = {k: v for k, v in revisions.items() if k in active}
+    metrics = {k: v for k, v in metrics.items() if k in active}
+    state_mod.save_revisions(cfg.revisions_file, revisions)
+    state_mod.save_metrics(cfg.reports_dir / "metrics.json", metrics)
     report_mod.write_links(cfg, results)
     log.info("done. %d/%d projects analyzed", len(results), len(cfg.projects))
     return 0
@@ -129,6 +218,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_analyze = sub.add_parser("analyze", help="clone, build and analyze all configured projects")
     add_common(p_analyze)
+    p_analyze.add_argument("--force", action="store_true", help="re-analyze projects even if the revision is unchanged")
     p_analyze.set_defaults(func=cmd_analyze)
 
     p_serve = sub.add_parser("serve", help="serve the generated HTML reports over HTTP")

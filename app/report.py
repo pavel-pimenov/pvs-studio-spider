@@ -18,6 +18,8 @@ LEVEL_NAMES = {1: "High", 2: "Medium", 3: "Low"}
 
 
 def _find_index(report_dir: Path) -> str | None:
+    if not report_dir.is_dir():
+        return None
     direct = report_dir / "index.html"
     if direct.exists():
         return direct.name
@@ -26,6 +28,11 @@ def _find_index(report_dir: Path) -> str | None:
         if candidate.exists():
             return f"{sub.name}/index.html"
     return None
+
+
+def is_report_dir(path: Path) -> bool:
+    """True if the directory contains a converted HTML report."""
+    return _find_index(path) is not None
 
 
 def _dedup_jquery(report_dir: Path, shared_dir: Path) -> None:
@@ -39,6 +46,20 @@ def _dedup_jquery(report_dir: Path, shared_dir: Path) -> None:
         shutil.copy2(jq, shared)
     jq.unlink()
     os.link(shared, jq)
+
+
+def has_report(project: Project, cfg: Config) -> bool:
+    """True if a converted HTML report and JSON stats already exist."""
+    if not (cfg.reports_dir / f"{project.slug}.json").exists():
+        return False
+    return _find_index(cfg.reports_dir / project.slug) is not None
+
+
+def summarize(project: Project, cfg: Config) -> dict:
+    """Recompute stats from stored artifacts without re-running the analyzer."""
+    stats = parse_json(cfg.reports_dir / f"{project.slug}.json")
+    stats["report"] = _find_index(cfg.reports_dir / project.slug) or ""
+    return stats
 
 
 def convert(project: Project, plog: Path, cfg: Config) -> dict:

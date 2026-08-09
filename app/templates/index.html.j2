@@ -39,6 +39,8 @@
   .project.active { background: #1c2533; border-color: #3b82c4; }
   .project .name { font-weight: 600; }
   .project .desc { color: #9aa4b2; font-size: .78rem; margin-top: .1rem; }
+  .project .met { color: #7d8794; font-size: .72rem; margin-top: .15rem;
+    font-variant-numeric: tabular-nums; }
   .project .foot { display: flex; align-items: center; gap: .5rem; margin-top: .3rem; }
   .project .commit { font-family: ui-monospace, monospace; font-size: .72rem; color: #9aa4b2; }
   .project .state { font-size: .72rem; margin-left: auto; color: #9aa4b2; }
@@ -111,14 +113,33 @@
   var selected = null;
   var lastData = null;
   var lastSig = null;
+  var metricsMap = {};
+  var initialSlug = decodeURIComponent((location.hash || '').replace(/^#\/?/, ''));
 
   var ACTIVE = ['cloning', 'building', 'analyzing', 'converting'];
   var STATE_RANK = { cloning: 0, building: 0, analyzing: 0, converting: 0,
                      done: 1, failed: 2, pending: 3, skipped: 4 };
 
+  function fmtBytes(b) {
+    if (!b) return '';
+    var u = ['B', 'KB', 'MB', 'GB', 'TB'], i = 0;
+    while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
+    return (i ? b.toFixed(1) : b) + ' ' + u[i];
+  }
+
+  function fmtTime(s) {
+    if (s == null) return '';
+    s = Math.round(s);
+    if (s >= 3600) return Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
+    if (s >= 60) return Math.floor(s / 60) + 'm ' + (s % 60) + 's';
+    return s + 's';
+  }
+
   function openReport(slug, report) {
     if (!report) return;
     selected = slug;
+    history.replaceState(null, '', '#' + slug);
+    document.title = slug + ' — PVS-Studio Spider';
     frame.src = slug + '/' + report;
     frame.style.display = 'block';
     welcome.style.display = 'none';
@@ -152,9 +173,14 @@
     else if (p.state === 'pending') stateHtml = '<span class="state">queued</span>';
     else if (p.state === 'skipped') stateHtml = '<span class="state">skipped</span>';
     else stateHtml = '<span class="spinner"></span> <span class="state">' + (p.message || p.state) + '</span>';
+    var met = metricsMap[p.slug] || {};
+    var metHtml = (met.disk_bytes || met.cpu_sec || met.wall_sec)
+      ? '<div class="met">' + fmtBytes(met.disk_bytes) + ' · CPU ' + fmtTime(met.cpu_sec) +
+        ' · ' + fmtTime(met.wall_sec) + '</div>' : '';
     return '<div class="name">' + p.name + '</div>' +
       (p.description ? '<div class="desc">' + p.description + '</div>' : '') +
       badges +
+      metHtml +
       '<div class="foot"><span class="commit">' + p.ref + ' @ ' + (p.commit || '—') + '</span>' + stateHtml + '</div>';
   }
 
@@ -185,8 +211,9 @@
       });
 
     var sig = items.map(function (s) {
-      var p = projects[s];
-      return s + '|' + p.state + '|' + (p.stats ? p.stats.total : '-') + '|' + (p.commit || '');
+      var p = projects[s], m = metricsMap[s] || {};
+      return s + '|' + p.state + '|' + (p.stats ? p.stats.total : '-') + '|' + (p.commit || '') +
+        '|' + (m.disk_bytes || '') + '|' + (m.cpu_sec || '');
     }).join('~');
     if (sig === lastSig) return;
     lastSig = sig;
@@ -195,7 +222,7 @@
     items.forEach(function (slug) {
       var p = projects[slug];
       var el = document.createElement('a');
-      el.className = 'project ' + p.state;
+      el.className = 'project ' + p.state + (slug === selected ? ' active' : '');
       el.setAttribute('data-slug', slug);
       el.innerHTML = itemHtml(p);
       if (p.state === 'done' && p.report) {
@@ -208,16 +235,24 @@
       nav.appendChild(el);
     });
 
-    if (selected && projects[selected] && projects[selected].state === 'done' && projects[selected].report) {
+    if (selected === null && initialSlug && projects[initialSlug] &&
+        projects[initialSlug].state === 'done' && projects[initialSlug].report) {
+      openReport(initialSlug, projects[initialSlug].report);
+    } else if (selected && projects[selected] && projects[selected].state === 'done' && projects[selected].report) {
       frame.src = selected + '/' + projects[selected].report;
     }
   }
 
   function poll() {
-    fetch('status.json?t=' + Date.now(), { cache: 'no-store' })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(render)
-      .catch(function () {});
+    Promise.all([
+      fetch('status.json?t=' + Date.now(), { cache: 'no-store' })
+        .then(function (r) { return r.ok ? r.json() : null; }),
+      fetch('metrics.json?t=' + Date.now(), { cache: 'no-store' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+    ]).then(function (res) {
+      metricsMap = res[1] || {};
+      render(res[0]);
+    }).catch(function () {});
   }
 
   search.addEventListener('input', function () { lastSig = null; render(lastData); });

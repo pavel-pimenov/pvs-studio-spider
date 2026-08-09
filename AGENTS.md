@@ -35,13 +35,20 @@ python3 -m app.cli analyze --verbose
 - `app/config.py` — загрузка `projects.yaml` в dataclass'ы `Config`/`Project`.
 - `app/clone.py` — `git clone`/`pull`.
 - `app/analyze.py` — настройка лицензии, CMake-сборка, запуск анализа.
+- `app/state.py` — хранение проанализированных ревизий в `revisions.txt`
+  (slug → commit), чтобы не переанализировать неизменённые проекты.
 - `app/report.py` — конвертация `.plog` → `fullhtml`/`json`, генерация
   `index.html` (портал) и `links.txt`.
 - `app/status.py` — прогресс анализа: пишет `reports_dir/status.json`,
   который портал опрашивает каждые 3 секунды.
+- `reports_dir/metrics.json` — метрики на проект (диск/CPU/время), показывает
+  портал; `analyze` также удаляет артефакты проектов, которых больше нет в
+  `projects.yaml` (прунинг осиротевших отчётов/клонов).
 - `app/discover.py` — поиск проектов через GitHub API.
 - `app/server.py` — `http.server` для раздачи отчётов.
 - `app/templates/index.html.j2` — Jinja2-шаблон landing-страницы.
+- `revisions.txt` — коммитится в git; проект с той же HEAD-ревнзией,
+  что и в файле, пропускается (`analyze --force` для полного прогона).
 
 ## Конвенции
 

@@ -91,11 +91,19 @@ def build_project(project: Project, cfg: Config) -> Path:
 
 
 def clean_build(project: Project, cfg: Config) -> None:
-    """Remove the project build directory to free disk space."""
-    build = cfg.work_dir / project.slug / project.build_dir
+    """Remove the whole project build directory to free disk space."""
+    build = cfg.work_dir / project.slug
     if build.exists():
         shutil.rmtree(build, ignore_errors=True)
-        log.info("%s: removed build dir %s", project.slug, build)
+        log.info("%s: removed work dir %s", project.slug, build)
+
+
+def clean_src(project: Project, cfg: Config) -> None:
+    """Remove the project source checkout to free disk space."""
+    src = cfg.src_dir / project.slug
+    if src.exists():
+        shutil.rmtree(src, ignore_errors=True)
+        log.info("%s: removed sources %s", project.slug, src)
 
 
 def run_pvs(project: Project, compile_db: Path, cfg: Config) -> Path:

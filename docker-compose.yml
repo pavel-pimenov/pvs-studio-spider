@@ -8,6 +8,7 @@ services:
       - ./data:/data
       - ${SPIDER_REPORTS_DIR:-/var/www/pvs-studio}:/var/www/pvs-studio
       - ./projects.yaml:/app/projects.yaml:ro
+      - ./revisions.txt:/app/revisions.txt
       - ~/.config/PVS-Studio:/root/.config/PVS-Studio:ro
     environment:
       - SPIDER_CONFIG=/app/projects.yaml

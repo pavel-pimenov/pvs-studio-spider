@@ -13,6 +13,10 @@ convert_groups: "GA:1,2,3"
 # Base URL used when generating shareable links for developers.
 base_url: "https://www.fly-server.ru/pvs-studio"
 
+# How many projects to build/analyze concurrently (parallel workers).
+# Override via `parallel:` / SPIDER_PARALLEL.
+parallel: 2
+
 projects:
   - name: jsoncpp
     repo: https://github.com/open-source-parsers/jsoncpp.git
@@ -66,11 +70,6 @@ projects:
     repo: https://github.com/FarGroup/FarManager.git
     ref: master
     description: "File and Archive Manager (Windows)"
-
-  - name: fluent-bit
-    repo: https://github.com/fluent/fluent-bit.git
-    ref: master
-    description: "Fast log and metrics processor"
 
   - name: flylinkdc-hub
     repo: https://github.com/pavel-pimenov/flylinkdc-hub.git
@@ -166,3 +165,150 @@ projects:
     repo: https://github.com/facebook/zstd.git
     ref: dev
     description: "Zstandard compression (C)"
+
+# Batch 1 (2026-08): top C++ libraries, CMake-based, no extra system deps.
+  - name: catch2
+    repo: https://github.com/Catch2/Catch2.git
+    ref: v3.x
+    description: "C++ test framework"
+
+  - name: flatbuffers
+    repo: https://github.com/google/flatbuffers.git
+    ref: master
+    description: "Cross-platform serialization library"
+
+  - name: fmt
+    repo: https://github.com/fmtlib/fmt.git
+    ref: main
+    description: "Modern C++ formatting library"
+
+  - name: googletest
+    repo: https://github.com/google/googletest.git
+    ref: main
+    description: "Google's C++ testing framework"
+
+  - name: mimalloc
+    repo: https://github.com/microsoft/mimalloc.git
+    ref: main3
+    description: "Compact general-purpose allocator"
+
+  - name: nlohmann-json
+    repo: https://github.com/nlohmann/json.git
+    ref: develop
+    description: "JSON for Modern C++ (header-only)"
+
+  - name: onetbb
+    repo: https://github.com/oneapi-src/oneTBB.git
+    ref: master
+    description: "Intel oneAPI Threading Building Blocks"
+
+  - name: simdjson
+    repo: https://github.com/simdjson/simdjson.git
+    ref: master
+    description: "High-performance JSON parser (SIMD)"
+
+  - name: spdlog
+    repo: https://github.com/gabime/spdlog.git
+    ref: v1.x
+    description: "Fast C++ logging library"
+
+  # Batch 2 (2026-08): top C/C++ libraries, CMake-based, no extra system deps.
+  - name: assimp
+    repo: https://github.com/assimp/assimp.git
+    ref: master
+    description: "Open Asset Import Library (3D model formats)"
+
+  - name: benchmark
+    repo: https://github.com/google/benchmark.git
+    ref: main
+    description: "C++ microbenchmark support library"
+
+  - name: box2d
+    repo: https://github.com/erincatto/box2d.git
+    ref: main
+    description: "2D physics engine for games"
+
+  - name: brotli
+    repo: https://github.com/google/brotli.git
+    ref: master
+    description: "Generic-purpose lossless compression (C)"
+
+  - name: cereal
+    repo: https://github.com/USCiLab/cereal.git
+    ref: master
+    description: "Header-only C++11 serialization"
+
+  - name: doctest
+    repo: https://github.com/doctest/doctest.git
+    ref: master
+    description: "Fast C++ single-header test framework"
+
+  - name: double-conversion
+    repo: https://github.com/google/double-conversion.git
+    ref: master
+    description: "Efficient double-to-string conversions"
+
+  - name: gflags
+    repo: https://github.com/gflags/gflags.git
+    ref: main
+    description: "Commandline flags module for C++"
+
+  - name: glog
+    repo: https://github.com/google/glog.git
+    ref: master
+    description: "C++ implementation of the Google logging module"
+
+  - name: highway
+    repo: https://github.com/google/highway.git
+    ref: master
+    description: "SIMD-accelerated C++ primitives"
+
+  - name: libarchive
+    repo: https://github.com/libarchive/libarchive.git
+    ref: master
+    description: "Multi-format archive and compression library (C)"
+
+  - name: libuv
+    repo: https://github.com/libuv/libuv.git
+    ref: v1.x
+    description: "Cross-platform asynchronous I/O (C)"
+
+  - name: lz4
+    repo: https://github.com/lz4/lz4.git
+    ref: dev
+    description: "Extremely fast compression (C)"
+
+  - name: pugixml
+    repo: https://github.com/zeux/pugixml.git
+    ref: master
+    description: "Light-weight XML processing library"
+
+  - name: range-v3
+    repo: https://github.com/ericniebler/range-v3.git
+    ref: master
+    description: "Range algorithms for C++"
+
+  - name: re2
+    repo: https://github.com/google/re2.git
+    ref: main
+    description: "Fast regular expression library (C++)"
+
+  - name: snappy
+    repo: https://github.com/google/snappy.git
+    ref: main
+    description: "Fast compression/decompression library"
+
+  - name: taskflow
+    repo: https://github.com/taskflow/taskflow.git
+    ref: master
+    description: "Modern C++ task parallelism"
+
+  - name: tinyxml2
+    repo: https://github.com/leethomason/tinyxml2.git
+    ref: master
+    description: "Simple XML parser in C++"
+
+  - name: yaml-cpp
+    repo: https://github.com/jbeder/yaml-cpp.git
+    ref: master
+    description: "YAML parser/emitter for C++"

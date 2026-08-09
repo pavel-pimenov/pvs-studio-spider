@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import threading
 from pathlib import Path
 
 from .config import Project
@@ -12,6 +13,7 @@ class Progress:
     def __init__(self, reports_dir: Path):
         self.reports_dir = reports_dir
         self.projects: dict[str, dict] = {}
+        self._lock = threading.Lock()
 
     def prepare(self, projects: list[Project]) -> None:
         for p in projects:
@@ -27,15 +29,16 @@ class Progress:
         self.write()
 
     def set(self, slug: str, state: str, message: str = "", stats: dict | None = None) -> None:
-        entry = self.projects.setdefault(slug, {"slug": slug, "name": slug})
-        entry["state"] = state
-        entry["message"] = message
-        if stats:
-            entry["stats"] = stats
-            entry["report"] = stats.get("report", "")
-            entry["commit"] = stats.get("commit", "")
-            entry["analyzed_at"] = stats.get("analyzed_at", "")
-        self.write()
+        with self._lock:
+            entry = self.projects.setdefault(slug, {"slug": slug, "name": slug})
+            entry["state"] = state
+            entry["message"] = message
+            if stats:
+                entry["stats"] = stats
+                entry["report"] = stats.get("report", "")
+                entry["commit"] = stats.get("commit", "")
+                entry["analyzed_at"] = stats.get("analyzed_at", "")
+            self.write()
 
     def write(self) -> None:
         path = self.reports_dir / "status.json"
