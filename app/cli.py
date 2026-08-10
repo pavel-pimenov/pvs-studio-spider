@@ -99,7 +99,7 @@ def cmd_analyze(args) -> int:
     analyze_mod.configure_license()
 
     progress = status_mod.Progress(cfg.reports_dir)
-    progress.prepare(cfg.projects)
+    progress.prepare(cfg.projects, keep={p.slug for p in full_projects})
     report_mod.render_portal(cfg)
     revisions = state_mod.load_revisions(cfg.revisions_file)
     metrics = state_mod.load_metrics(cfg.reports_dir / "metrics.json")
@@ -110,7 +110,9 @@ def cmd_analyze(args) -> int:
         cpu_start = util.thread_cpu()
         try:
             progress.set(project.slug, "cloning", "clone / update repository")
+            t = time.perf_counter()
             src = clone_mod.clone_or_update(project, cfg.src_dir)
+            clone_sec = round(time.perf_counter() - t, 1)
             commit = clone_mod.head_commit(src)
             if not args.force and revisions.get(project.slug) == commit:
                 if report_mod.has_report(project, cfg):
@@ -118,14 +120,24 @@ def cmd_analyze(args) -> int:
                     log.info("%s: revision %s already analyzed, skipping", project.slug, commit)
                     return project, report_mod.summarize(project, cfg), None, None
             progress.set(project.slug, "building", "cmake configure + build")
+            t = time.perf_counter()
             compile_db = analyze_mod.build_project(project, cfg)
+            build_sec = round(time.perf_counter() - t, 1)
             progress.set(project.slug, "analyzing", "pvs-studio-analyzer")
+            t = time.perf_counter()
             plog = analyze_mod.run_pvs(project, compile_db, cfg)
+            analyze_sec = round(time.perf_counter() - t, 1)
             progress.set(project.slug, "converting", "plog-converter fullhtml/json")
+            t = time.perf_counter()
             stats = report_mod.convert(project, plog, cfg)
+            convert_sec = round(time.perf_counter() - t, 1)
             entry = {
                 "commit": commit,
                 "analyzed_at": stats["analyzed_at"],
+                "clone_sec": clone_sec,
+                "build_sec": build_sec,
+                "analyze_sec": analyze_sec,
+                "convert_sec": convert_sec,
                 "wall_sec": round(time.perf_counter() - wall_start, 1),
                 "cpu_sec": round(util.thread_cpu() - cpu_start, 1),
                 "disk_bytes": (

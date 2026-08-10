@@ -322,3 +322,14 @@ projects:
       - -DFORTE_BUILD_EXECUTABLE=OFF
       - -DFORTE_BUILD_STATIC_LIBRARY=ON
       - -DFORTE_MODULE_IEC61131=ON
+
+  # Batch 3 (2026-08): timing checkpoint — per-phase build/PVS timings.
+  - name: curl
+    repo: https://github.com/curl/curl.git
+    ref: master
+    description: "Command line tool and library for transferring data with URLs (C)"
+
+  - name: libpng
+    repo: https://github.com/pnggroup/libpng.git
+    ref: libpng16
+    description: "Portable Network Graphics (PNG) reference library (C)"

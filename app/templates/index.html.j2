@@ -30,18 +30,24 @@
   .bar { height: 6px; background: #1c2533; border-radius: 4px; overflow: hidden; }
   .bar > div { height: 100%; background: #3b82c4; width: 0; transition: width .4s; }
   .ov-text { color: #9aa4b2; font-size: .75rem; margin-top: .3rem; }
-  nav { display: flex; flex-direction: column; gap: .4rem; }
+  nav { display: flex; flex-direction: column; gap: .12rem; }
   .project {
-    display: block; padding: .55rem .6rem; border-radius: 8px;
+    display: block; position: relative; padding: .3rem .55rem; border-radius: 8px;
     border: 1px solid transparent; color: inherit; text-decoration: none;
   }
   .project:hover { background: #171d26; }
   .project.active { background: #1c2533; border-color: #3b82c4; }
-  .project .name { font-weight: 600; }
-  .project .desc { color: #9aa4b2; font-size: .78rem; margin-top: .1rem; }
-  .project .met { color: #7d8794; font-size: .72rem; margin-top: .15rem;
+  .project.done { cursor: pointer; }
+  .project .repo-link {
+    position: absolute; top: .3rem; right: .45rem; color: #7d8794;
+    display: inline-flex; padding: .1rem; border-radius: 6px; line-height: 0;
+  }
+  .project .repo-link:hover { color: #e6e6e6; background: #171d26; }
+  .project .name { font-weight: 600; padding-right: 1.5rem; }
+  .project .desc { color: #9aa4b2; font-size: .78rem; margin-top: .05rem; }
+  .project .met { color: #7d8794; font-size: .72rem; margin-top: .1rem;
     font-variant-numeric: tabular-nums; }
-  .project .foot { display: flex; align-items: center; gap: .5rem; margin-top: .3rem; }
+  .project .foot { display: flex; align-items: center; gap: .5rem; margin-top: .2rem; }
   .project .commit { font-family: ui-monospace, monospace; font-size: .72rem; color: #9aa4b2; }
   .project .state { font-size: .72rem; margin-left: auto; color: #9aa4b2; }
   .project.inprogress .state { color: #7dd3fc; }
@@ -49,7 +55,7 @@
   .project.done .state { color: #34d399; }
   .project.pending { opacity: .55; }
   .project.skipped { opacity: .45; }
-  .badges { margin-top: .3rem; display: flex; gap: .35rem; flex-wrap: wrap; }
+  .badges { margin-top: .2rem; display: flex; gap: .35rem; flex-wrap: wrap; }
   .badge { display: inline-block; min-width: 2em; text-align: center; padding: .05rem .35rem;
     border-radius: 6px; font-size: .75rem; font-variant-numeric: tabular-nums; }
   .b-high { background: #7f1d1d; color: #fecaca; }
@@ -158,6 +164,18 @@
   }
 
   function itemHtml(p) {
+    var esc = function (s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;'); };
+    var repo = p.repo ? '<a class="repo-link" href="' + esc(p.repo) +
+      '" target="_blank" rel="noopener" title="' + esc(p.repo) +
+      '" aria-label="Repository"><svg viewBox="0 0 16 16" width="14" height="14" ' +
+      'fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59' +
+      '.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23' +
+      '-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87' +
+      '.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59' +
+      '.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36' +
+      '.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15' +
+      ' 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15' +
+      '.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>' : '';
     var badges = '';
     if (p.stats) {
       var lv = p.stats.levels || {};
@@ -174,10 +192,18 @@
     else if (p.state === 'skipped') stateHtml = '<span class="state">skipped</span>';
     else stateHtml = '<span class="spinner"></span> <span class="state">' + (p.message || p.state) + '</span>';
     var met = metricsMap[p.slug] || {};
-    var metHtml = (met.disk_bytes || met.cpu_sec || met.wall_sec)
-      ? '<div class="met">' + fmtBytes(met.disk_bytes) + ' · CPU ' + fmtTime(met.cpu_sec) +
-        ' · ' + fmtTime(met.wall_sec) + '</div>' : '';
-    return '<div class="name">' + p.name + '</div>' +
+    var metTitle = 'CPU ' + fmtTime(met.cpu_sec) + ' · total ' + fmtTime(met.wall_sec) +
+      (met.clone_sec ? ' · clone ' + fmtTime(met.clone_sec) : '') +
+      (met.build_sec ? ' · build ' + fmtTime(met.build_sec) : '') +
+      (met.analyze_sec ? ' · pvs ' + fmtTime(met.analyze_sec) : '') +
+      (met.convert_sec ? ' · convert ' + fmtTime(met.convert_sec) : '');
+    var metHtml = (met.disk_bytes || met.build_sec || met.analyze_sec || met.cpu_sec || met.wall_sec)
+      ? '<div class="met" title="' + metTitle + '">' + fmtBytes(met.disk_bytes) +
+        (met.build_sec ? ' · build ' + fmtTime(met.build_sec) : '') +
+        (met.analyze_sec ? ' · pvs ' + fmtTime(met.analyze_sec) : '') +
+        ' · total ' + fmtTime(met.wall_sec) + '</div>' : '';
+    return repo +
+      '<div class="name">' + p.name + '</div>' +
       (p.description ? '<div class="desc">' + p.description + '</div>' : '') +
       badges +
       metHtml +
@@ -221,14 +247,13 @@
     nav.innerHTML = '';
     items.forEach(function (slug) {
       var p = projects[slug];
-      var el = document.createElement('a');
+      var el = document.createElement('div');
       el.className = 'project ' + p.state + (slug === selected ? ' active' : '');
       el.setAttribute('data-slug', slug);
       el.innerHTML = itemHtml(p);
       if (p.state === 'done' && p.report) {
-        el.setAttribute('href', slug + '/' + p.report);
         el.addEventListener('click', function (e) {
-          e.preventDefault();
+          if (e.target.closest('.repo-link')) return;
           openReport(slug, p.report);
         });
       }

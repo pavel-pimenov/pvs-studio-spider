@@ -8,6 +8,7 @@ brotli           8e10eeb
 civetweb         588860e
 cppcheck         4b0c239
 cppkafka         9c5ea0e
+curl             26fdb92
 doctest          d44d4f6
 double-conversion 9ae489f
 ecal             e9ca7cf
@@ -25,6 +26,7 @@ jsoncpp          60de77f
 leveldb          7ee830d
 libarchive       682a87b
 libmdbx          9d7c524
+libpng           cae4745
 librats          47077f2
 librdkafka       0623a30
 libtorrent       a702489

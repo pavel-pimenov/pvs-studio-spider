@@ -15,7 +15,21 @@ class Progress:
         self.projects: dict[str, dict] = {}
         self._lock = threading.Lock()
 
-    def prepare(self, projects: list[Project]) -> None:
+    def prepare(self, projects: list[Project], keep: set[str] | None = None) -> None:
+        """Seed status entries for the current run, keeping previously known
+        entries for projects not part of it (e.g. an --only subset)."""
+        if keep is None:
+            keep = {p.slug for p in projects}
+        self.projects = {}
+        path = self.reports_dir / "status.json"
+        if path.exists():
+            try:
+                existing = json.loads(path.read_text(encoding="utf-8")).get("projects", {})
+            except (OSError, json.JSONDecodeError):
+                existing = {}
+            for slug, entry in existing.items():
+                if slug in keep:
+                    self.projects[slug] = entry
         for p in projects:
             self.projects[p.slug] = {
                 "slug": p.slug,
