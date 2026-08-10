@@ -39,7 +39,8 @@ projects:
   - name: airdc
     repo: https://github.com/airdcpp/airdcpp-core.git
     ref: master
-    description: "Cross-platform core library for AirDC++"
+    description: "AirDC++ core library (Windows)"
+    enabled: false
     cmake_project_include: app/cmake/legacy-check-modules.cmake
     cmake_options:
       - -DCMAKE_MODULE_PATH=/app/app/cmake

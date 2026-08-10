@@ -201,7 +201,7 @@ def cmd_analyze(args) -> int:
     metrics = {k: v for k, v in metrics.items() if k in active}
     state_mod.save_revisions(cfg.revisions_file, revisions)
     state_mod.save_metrics(cfg.reports_dir / "metrics.json", metrics)
-    report_mod.write_links(cfg, results)
+    report_mod.write_links(cfg)
     stats_stop.set()
     log.info("done. %d/%d projects analyzed", len(results), len(cfg.projects))
     return 0

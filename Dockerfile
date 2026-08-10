@@ -28,6 +28,14 @@ RUN apt-get update \
         libboost-system-dev \
         libboost-thread-dev \
         libboost-regex-dev \
+        libboost-serialization-dev \
+        libwayland-dev \
+        libxkbcommon-dev \
+        libx11-dev \
+        libxrandr-dev \
+        libxinerama-dev \
+        libxcursor-dev \
+        libxi-dev \
         libz-dev \
         libsqlite3-dev \
         libpcre2-dev \

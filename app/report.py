@@ -45,7 +45,10 @@ def _dedup_jquery(report_dir: Path, shared_dir: Path) -> None:
     if not shared.exists():
         shutil.copy2(jq, shared)
     jq.unlink()
-    os.link(shared, jq)
+    try:
+        os.link(shared, jq)
+    except OSError:
+        shutil.copy2(shared, jq)
 
 
 def has_report(project: Project, cfg: Config) -> bool:
@@ -145,10 +148,13 @@ def render_portal(cfg: Config) -> None:
     log.info("portal page written to %s", index_path)
 
 
-def write_links(cfg: Config, results: list[tuple[Project, dict]]) -> None:
+def write_links(cfg: Config) -> None:
     """Write links.txt with ready-to-share URLs for every project report."""
     lines = ["# PVS-Studio Spider report links", "# share these with project maintainers", ""]
-    for project, stats in results:
+    for project in cfg.projects:
+        if not has_report(project, cfg):
+            continue
+        stats = summarize(project, cfg)
         report = stats.get("report") or ""
         url = f"{cfg.base_url}/{project.slug}/" + (report or "")
         lines.append(f"{project.slug:<14} {url}")
