@@ -44,15 +44,18 @@ def configure_license() -> None:
 
 
 def _cmake_configure(project: Project, src: Path, build: Path, cfg: Config) -> None:
+    cmake_src = src / project.cmake_src if project.cmake_src else src
     cmd = [
         "cmake",
-        "-S", str(src),
+        "-S", str(cmake_src),
         "-B", str(build),
         "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
         "-DCMAKE_BUILD_TYPE=Debug",
         "-DBUILD_TESTING=OFF",
         *project.cmake_options,
     ]
+    if project.cmake_project_include:
+        cmd += [f"-DCMAKE_PROJECT_INCLUDE={project.cmake_project_include}"]
     run(cmd, check=True)
 
 
@@ -68,22 +71,27 @@ def build_project(project: Project, cfg: Config) -> Path:
         shutil.rmtree(build)
     build.mkdir(parents=True, exist_ok=True)
 
-    log.info("%s: configuring with CMake", project.slug)
-    _cmake_configure(project, src, build, cfg)
-    log.info("%s: building", project.slug)
-    _cmake_build(project, src, build, cfg)
-
     compile_db = build / "compile_commands.json"
-    if not compile_db.exists():
-        # Some projects hide the compile database; retry with `bear` tracing.
-        log.warning("%s: no compile_commands.json, retrying with bear", project.slug)
-        shutil.rmtree(build)
-        build.mkdir(parents=True, exist_ok=True)
+    if project.build_cmd:
+        log.info("%s: building via custom command under bear", project.slug)
+        cmd = project.build_cmd.format(jobs=cfg.jobs)
+        run(["bear", "--output", str(compile_db), "--", "bash", "-c", cmd], cwd=src, check=False)
+    else:
+        log.info("%s: configuring with CMake", project.slug)
         _cmake_configure(project, src, build, cfg)
-        run(
-            ["bear", "--output", str(compile_db), "--", "cmake", "--build", str(build), "--parallel", str(cfg.jobs)],
-            check=False,
-        )
+        log.info("%s: building", project.slug)
+        _cmake_build(project, src, build, cfg)
+
+        if not compile_db.exists():
+            # Some projects hide the compile database; retry with `bear` tracing.
+            log.warning("%s: no compile_commands.json, retrying with bear", project.slug)
+            shutil.rmtree(build)
+            build.mkdir(parents=True, exist_ok=True)
+            _cmake_configure(project, src, build, cfg)
+            run(
+                ["bear", "--output", str(compile_db), "--", "cmake", "--build", str(build), "--parallel", str(cfg.jobs)],
+                check=False,
+            )
 
     if not compile_db.exists():
         raise RuntimeError(f"{project.slug}: could not produce compile_commands.json")

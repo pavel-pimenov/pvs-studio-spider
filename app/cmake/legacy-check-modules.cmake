@@ -1,0 +1,8 @@
+include(CheckFunctionExists)
+include(CheckIncludeFile)
+include(CheckIncludeFiles)
+include(CheckSymbolExists)
+include(CheckCSourceCompiles)
+include(CheckCXXSourceCompiles)
+include(CheckLibraryExists)
+include(CheckTypeSize)

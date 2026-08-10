@@ -18,6 +18,10 @@ class Project:
     ref: str = "main"
     description: str = ""
     cmake_options: list[str] = field(default_factory=list)
+    cmake_src: str = ""
+    cmake_project_include: str = ""
+    build_cmd: str = ""
+    submodules: list[str] = field(default_factory=list)
     build_dir: str = "build"
     enabled: bool = True
 
@@ -59,10 +63,14 @@ class Config:
         convert_groups = str(raw.get("convert_groups", env.get("SPIDER_CONVERT_GROUPS", "GA:1,2,3")))
         base_url = str(raw.get("base_url", env.get("SPIDER_BASE_URL", "http://localhost:8000"))).rstrip("/")
 
+        config_root = Path(path).resolve().parent
         projects: list[Project] = []
         for item in raw.get("projects", []):
             if not isinstance(item, dict) or not item.get("name") or not item.get("repo"):
                 continue
+            include = str(item.get("cmake_project_include", ""))
+            if include and not Path(include).is_absolute():
+                include = str(config_root / include)
             projects.append(
                 Project(
                     name=str(item["name"]),
@@ -70,6 +78,10 @@ class Config:
                     ref=str(item.get("ref", "main")),
                     description=str(item.get("description", "")),
                     cmake_options=[str(o) for o in item.get("cmake_options", [])],
+                    cmake_src=str(item.get("cmake_src", "")),
+                    cmake_project_include=include,
+                    build_cmd=str(item.get("build_cmd", "")),
+                    submodules=[str(s) for s in item.get("submodules", [])],
                     build_dir=str(item.get("build_dir", "build")),
                     enabled=bool(item.get("enabled", True)),
                 )

@@ -20,6 +20,17 @@
   }
   aside h1 { font-size: 1.05rem; margin: 0 0 .25rem; }
   aside .meta { color: #9aa4b2; font-size: .78rem; margin: 0 0 .6rem; line-height: 1.4; }
+  .sysdash {
+    display: flex; flex-direction: column; gap: .25rem;
+    background: #171d26; border: 1px solid #2a3140; border-radius: 8px;
+    padding: .4rem .55rem; margin-bottom: .6rem; font-size: .72rem;
+  }
+  .sys-row { display: flex; align-items: center; gap: .4rem; }
+  .sys-label { color: #9aa4b2; min-width: 2.2em; }
+  .sys-bar { flex: 1; height: 5px; background: #1c2533; border-radius: 3px; overflow: hidden; }
+  .sys-bar > div { height: 100%; background: #3b82c4; width: 0; transition: width .4s; }
+  #cpufill { background: #34d399; }
+  .sys-val { color: #e6e6e6; font-variant-numeric: tabular-nums; min-width: 5.5em; text-align: right; }
   .controls { display: flex; flex-direction: column; gap: .45rem; margin-bottom: .7rem; }
   #search, #filter {
     width: 100%; padding: .45rem .6rem; font-size: .85rem; color: #e6e6e6;
@@ -77,6 +88,18 @@
 </head>
 <body>
 <aside>
+  <div class="sysdash">
+    <div class="sys-row" title="Free disk space on the server">
+      <span class="sys-label">disk</span>
+      <div class="sys-bar"><div id="diskfill"></div></div>
+      <span class="sys-val" id="diskval">—</span>
+    </div>
+    <div class="sys-row" title="Current CPU load">
+      <span class="sys-label">cpu</span>
+      <div class="sys-bar"><div id="cpufill"></div></div>
+      <span class="sys-val" id="cpuval">—</span>
+    </div>
+  </div>
   <h1>PVS-Studio Spider</h1>
   <p class="meta">
     Static analysis of open-source C/C++ projects with
@@ -116,6 +139,10 @@
   var hint = document.getElementById('hint');
   var search = document.getElementById('search');
   var filter = document.getElementById('filter');
+  var diskfill = document.getElementById('diskfill');
+  var diskval = document.getElementById('diskval');
+  var cpufill = document.getElementById('cpufill');
+  var cpuval = document.getElementById('cpuval');
   var selected = null;
   var lastData = null;
   var lastSig = null;
@@ -268,14 +295,30 @@
     }
   }
 
+  function renderSys(s) {
+    if (!s) return;
+    if (s.disk_total) {
+      var pct = Math.round(s.disk_free / s.disk_total * 100);
+      diskfill.style.width = pct + '%';
+      diskval.textContent = fmtBytes(s.disk_free) + ' free';
+    }
+    if (s.cpu_percent != null) {
+      cpufill.style.width = Math.min(100, s.cpu_percent) + '%';
+      cpuval.textContent = Math.round(s.cpu_percent) + '%';
+    }
+  }
+
   function poll() {
     Promise.all([
       fetch('status.json?t=' + Date.now(), { cache: 'no-store' })
         .then(function (r) { return r.ok ? r.json() : null; }),
       fetch('metrics.json?t=' + Date.now(), { cache: 'no-store' })
+        .then(function (r) { return r.ok ? r.json() : null; }),
+      fetch('server.json?t=' + Date.now(), { cache: 'no-store' })
         .then(function (r) { return r.ok ? r.json() : null; })
     ]).then(function (res) {
       metricsMap = res[1] || {};
+      renderSys(res[2]);
       render(res[0]);
     }).catch(function () {});
   }

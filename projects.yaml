@@ -40,6 +40,10 @@ projects:
     repo: https://github.com/airdcpp/airdcpp-core.git
     ref: master
     description: "Cross-platform core library for AirDC++"
+    cmake_project_include: app/cmake/legacy-check-modules.cmake
+    cmake_options:
+      - -DCMAKE_MODULE_PATH=/app/app/cmake
+      - -DVERSION=1.0.0
 
   - name: civetweb
     repo: https://github.com/civetweb/civetweb.git
@@ -60,6 +64,7 @@ projects:
     repo: https://github.com/eclipse-ecal/ecal.git
     ref: master
     description: "eCAL - high performance communication layer"
+    enabled: false
 
   - name: far2l
     repo: https://github.com/elfmz/far2l.git
@@ -70,6 +75,7 @@ projects:
     repo: https://github.com/FarGroup/FarManager.git
     ref: master
     description: "File and Archive Manager (Windows)"
+    enabled: false
 
   - name: flylinkdc-hub
     repo: https://github.com/pavel-pimenov/flylinkdc-hub.git
@@ -80,6 +86,7 @@ projects:
     repo: https://github.com/haproxy/haproxy.git
     ref: master
     description: "HAProxy load balancer"
+    build_cmd: "make -j{jobs} TARGET=linux-glibc USE_OPENSSL=1 USE_PCRE2=1 USE_ZLIB=1"
 
   - name: libmdbx
     repo: https://github.com/isar/libmdbx.git
@@ -100,6 +107,10 @@ projects:
     repo: https://github.com/arvidn/libtorrent.git
     ref: RC_2_1
     description: "Efficient C++ bittorrent implementation"
+    cmake_options:
+      - -Dwebtorrent=OFF
+    submodules:
+      - deps/try_signal
 
   - name: libzmq
     repo: https://github.com/zeromq/libzmq.git
@@ -120,16 +131,19 @@ projects:
     repo: https://github.com/MediaArea/MediaInfo.git
     ref: master
     description: "Technical and tag information viewer"
+    enabled: false
 
   - name: mpc-be-core
     repo: https://github.com/Aleksoid1978/MPC-BE.git
     ref: master
     description: "Media Player Classic - BE (core)"
+    enabled: false
 
   - name: mtproxy
     repo: https://github.com/TelegramMessenger/MTProxy.git
     ref: master
     description: "MTProxy for Telegram (C)"
+    build_cmd: "make -j{jobs}"
 
   - name: open62541
     repo: https://github.com/open62541/open62541.git
@@ -140,11 +154,17 @@ projects:
     repo: https://github.com/Tencent/rapidjson.git
     ref: master
     description: "Fast JSON parser/generator for C++"
+    cmake_options:
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 
   - name: verlihub
     repo: https://github.com/Verlihub/verlihub.git
     ref: master
     description: "Verlihub DC++ hub software (C++)"
+    cmake_options:
+      - -DMYSQL_INCLUDE_DIR=/usr/include/mariadb
+      - -DMYSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libmariadbclient.so
+      - -DUSE_CUSTOM_AUTOSPRINTF=ON
 
   - name: wolfssl
     repo: https://github.com/wolfSSL/wolfssl.git
@@ -155,6 +175,15 @@ projects:
     repo: https://github.com/wxWidgets/wxWidgets.git
     ref: master
     description: "Cross-platform C++ GUI library"
+    submodules:
+      - src/zlib
+      - src/expat
+      - src/png
+      - src/jpeg
+      - src/tiff
+      - 3rdparty/libwebp
+      - src/stc/scintilla
+      - src/stc/lexilla
 
   - name: zlib-ng
     repo: https://github.com/zlib-ng/zlib-ng.git
@@ -168,8 +197,8 @@ projects:
 
 # Batch 1 (2026-08): top C++ libraries, CMake-based, no extra system deps.
   - name: catch2
-    repo: https://github.com/Catch2/Catch2.git
-    ref: v3.x
+    repo: https://github.com/catchorg/Catch2.git
+    ref: devel
     description: "C++ test framework"
 
   - name: flatbuffers
@@ -196,6 +225,7 @@ projects:
     repo: https://github.com/nlohmann/json.git
     ref: develop
     description: "JSON for Modern C++ (header-only)"
+    build_cmd: "echo \"#include <nlohmann/json.hpp>\" > tu.cpp && g++ -std=c++17 -Isingle_include -c tu.cpp -o tu.o"
 
   - name: onetbb
     repo: https://github.com/oneapi-src/oneTBB.git
@@ -222,11 +252,17 @@ projects:
     repo: https://github.com/google/benchmark.git
     ref: main
     description: "C++ microbenchmark support library"
+    cmake_options:
+      - -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
+      - -DBENCHMARK_ENABLE_TESTING=OFF
 
   - name: box2d
     repo: https://github.com/erincatto/box2d.git
     ref: main
     description: "2D physics engine for games"
+    cmake_options:
+      - -DBOX2D_BUILD_UNIT_TESTS=OFF
+      - -DBOX2D_BUILD_TESTBED=OFF
 
   - name: brotli
     repo: https://github.com/google/brotli.git
@@ -237,6 +273,8 @@ projects:
     repo: https://github.com/USCiLab/cereal.git
     ref: master
     description: "Header-only C++11 serialization"
+    cmake_options:
+      - -DCEREAL_BUILD_TESTS=OFF
 
   - name: doctest
     repo: https://github.com/doctest/doctest.git
@@ -277,6 +315,7 @@ projects:
     repo: https://github.com/lz4/lz4.git
     ref: dev
     description: "Extremely fast compression (C)"
+    cmake_src: build/cmake
 
   - name: pugixml
     repo: https://github.com/zeux/pugixml.git
@@ -297,6 +336,9 @@ projects:
     repo: https://github.com/google/snappy.git
     ref: main
     description: "Fast compression/decompression library"
+    cmake_options:
+      - -DSNAPPY_BUILD_TESTS=OFF
+      - -DSNAPPY_BUILD_BENCHMARKS=OFF
 
   - name: taskflow
     repo: https://github.com/taskflow/taskflow.git

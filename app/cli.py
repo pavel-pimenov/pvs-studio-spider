@@ -5,6 +5,7 @@ import logging
 import os
 import shutil
 import sys
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -18,6 +19,7 @@ from . import report as report_mod
 from . import server as server_mod
 from . import state as state_mod
 from . import status as status_mod
+from . import sysmon
 from . import util
 from .config import Config
 from .util import run
@@ -39,7 +41,7 @@ def _load_config(args) -> Config:
     return Config.load(args.config)
 
 
-RESERVED_REPORTS = {"index.html", "links.txt", "status.json", "metrics.json"}
+RESERVED_REPORTS = {"index.html", "links.txt", "status.json", "metrics.json", "server.json"}
 
 
 def _dir_bytes(path: Path) -> int:
@@ -103,6 +105,17 @@ def cmd_analyze(args) -> int:
     report_mod.render_portal(cfg)
     revisions = state_mod.load_revisions(cfg.revisions_file)
     metrics = state_mod.load_metrics(cfg.reports_dir / "metrics.json")
+
+    stats_stop = threading.Event()
+
+    def _stats_loop() -> None:
+        while not stats_stop.wait(2):
+            try:
+                sysmon.write_stats(cfg.reports_dir / "server.json", base=cfg.reports_dir)
+            except OSError as exc:
+                log.warning("cannot write server.json: %s", exc)
+
+    threading.Thread(target=_stats_loop, daemon=True).start()
 
     def worker(project: Project) -> tuple[Project, dict | None, dict | None, str | None]:
         log.info("=== %s ===", project.slug)
@@ -189,6 +202,7 @@ def cmd_analyze(args) -> int:
     state_mod.save_revisions(cfg.revisions_file, revisions)
     state_mod.save_metrics(cfg.reports_dir / "metrics.json", metrics)
     report_mod.write_links(cfg, results)
+    stats_stop.set()
     log.info("done. %d/%d projects analyzed", len(results), len(cfg.projects))
     return 0
 

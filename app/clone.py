@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import shutil
 from pathlib import Path
 
 from .config import Project
@@ -28,7 +29,14 @@ def clone_or_update(project: Project, src_dir: Path) -> Path:
                 project.slug,
                 project.ref,
             )
+            shutil.rmtree(dest, ignore_errors=True)
             run(["git", "clone", "--depth", "1", project.repo, str(dest)], check=True)
+    if project.submodules:
+        log.info("%s: initializing submodules %s", project.slug, ", ".join(project.submodules))
+        run(
+            ["git", "-C", str(dest), "submodule", "update", "--init", "--depth", "1", "--", *project.submodules],
+            check=True,
+        )
     return dest
 
 

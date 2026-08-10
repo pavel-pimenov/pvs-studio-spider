@@ -3,7 +3,7 @@
 4diac-forte      c0b0dff
 GameNetworkingSockets e707b3a
 airdc            55d51ce
-assimp           aa9f632
+assimp           ff7b4ca
 brotli           8e10eeb
 civetweb         588860e
 cppcheck         4b0c239
@@ -16,7 +16,7 @@ far2l            b2de9c9
 farmanager       d71995a
 flatbuffers      81edeb1
 flylinkdc-hub    80e950d
-fmt              60ccad5
+fmt              4f645a8
 gflags           bdda022
 glog             53d58e4
 googletest       d89aac5
@@ -38,7 +38,7 @@ mimalloc         fc1e2ac
 mpc-be-core      9c91616
 mtproxy          f36d8af
 onetbb           fe9bfc5
-open62541        a5b9620
+open62541        7fdcd9c
 pugixml          27b6832
 range-v3         108f93c
 rapidjson        24b5e7a

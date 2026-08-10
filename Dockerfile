@@ -25,17 +25,50 @@ RUN apt-get update \
         libssl-dev \
         libcurl4-openssl-dev \
         libboost-dev \
+        libboost-system-dev \
+        libboost-thread-dev \
+        libboost-regex-dev \
         libz-dev \
         libsqlite3-dev \
         libpcre2-dev \
         libprotobuf-dev \
         protobuf-compiler \
         libevent-dev \
+        libabsl-dev \
+        libbz2-dev \
+        libuchardet-dev \
+        librdkafka-dev \
+        liblua5.4-dev \
+        libgtk-3-dev \
+        libmariadb-dev \
+        libminiupnpc-dev \
+        libleveldb-dev \
+        libmaxminddb-dev \
+        libsnappy-dev \
+        libtbb-dev \
+        libminizip-dev \
+        libcivetweb-dev \
+        libwxgtk3.2-dev \
+        libxml2-dev \
+        libtinyxml2-dev \
+        libspdlog-dev \
+        nlohmann-json3-dev \
+        gettext \
         python3 \
         python3-pip \
         python3-venv \
         strace \
     && rm -rf /var/lib/apt/lists/*
+
+# PCRE1 (needed by verlihub): dropped from Ubuntu 26.04, build 8.45 from source.
+RUN wget -q https://downloads.sourceforge.net/project/pcre/pcre/8.45/pcre-8.45.tar.gz -O /tmp/pcre.tar.gz \
+    && tar xzf /tmp/pcre.tar.gz -C /tmp \
+    && cd /tmp/pcre-8.45 \
+    && ./configure --quiet \
+    && make -j"$(nproc)" \
+    && make install \
+    && ldconfig \
+    && rm -rf /tmp/pcre*
 
 # PVS-Studio (Linux) from the official repository.
 RUN wget -qO- https://wcdn.pvs-studio.com/etc/pubkey.txt \
