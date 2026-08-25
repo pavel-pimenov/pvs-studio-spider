@@ -69,8 +69,10 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # PCRE1 (needed by verlihub): dropped from Ubuntu 26.04, build 8.45 from source.
+# NB: extracted via python3 because GNU tar hits unimplemented syscalls under
+# Rosetta (linux/amd64 emulation on Apple Silicon).
 RUN wget -q https://downloads.sourceforge.net/project/pcre/pcre/8.45/pcre-8.45.tar.gz -O /tmp/pcre.tar.gz \
-    && tar xzf /tmp/pcre.tar.gz -C /tmp \
+    && python3 -c "import tarfile; tarfile.open('/tmp/pcre.tar.gz').extractall('/tmp')" \
     && cd /tmp/pcre-8.45 \
     && ./configure --quiet \
     && make -j"$(nproc)" \

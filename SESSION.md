@@ -2,6 +2,32 @@
 
 Журнал работ над проектом PVS-Studio Spider.
 
+## 2026-08-25 — запуск на Apple Silicon, реанализ tinyxml2
+
+**Сделано:**
+- Проведён ревью всех модулей `app/` (cli, config, clone, analyze, report,
+  state, status, sysmon, server, discover) — критичных багов не найдено;
+  замечание: в `cli.py` аннотация `worker(project: Project)` ссылается на
+  неимпортированный `Project` (не падает только из-за отложенных аннотаций).
+- Образ не собирался на Apple Silicon: репозиторий viva64 отдаёт только
+  amd64-пакеты (зависимость strace:amd64 нерезолвится на arm64), а под
+  Rosetta GNU tar падает с ENOSYS (openat2 не реализован). Исправлено:
+  - `docker-compose.yml`: `platform: linux/amd64` для сервиса spider;
+  - `Dockerfile`: распаковка pcre-8.45 через `python3 -m tarfile`.
+- Собран образ `pvs-studio-spider`, выполнен прогон
+  `analyze --force --only tinyxml2`.
+
+**Результаты:**
+- tinyxml2 @ 8224e42: 29 предупреждений (High=0, Medium=2, Low=27),
+  wall=13.4s (clone 1.8 + build 7.3 + analyze 4.2 + convert 0.1).
+- Отчёт, links.txt, revisions.txt обновлены. Локальный metrics.json содержит
+  только tinyxml2 (на этом Mac data/ неполный — основной прогон живёт на сервере).
+
+**Следующие шаги:**
+- Закоммитить фикс сборки (Dockerfile + docker-compose.yml), если подтверждено.
+- Импортировать `Project` в cli.py или убрать аннотацию.
+- Проверить stale-статусы failed в status.json (из прошлой сессии).
+
 ## 2026-08-10 — токен пуша, дисковое место, запуск Batch 4
 
 **Сделано:**
