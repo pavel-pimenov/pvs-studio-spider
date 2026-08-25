@@ -2,6 +2,25 @@
 
 Журнал работ над проектом PVS-Studio Spider.
 
+## 2026-08-25 (2) — новый проект mbedtls
+
+**Сделано:**
+- Запушен фикс сборки (`7ff7eb4`) на origin/main.
+- Добавлен проект `mbedtls` в projects.yaml: ветка mbedtls-3.6 LTS,
+  обязателен сабмодуль framework (CMakeLists без него падает на этапе
+  configure). Прогон: `analyze --only mbedtls`.
+
+**Результаты:**
+- mbedtls @ 70058ce: 615 предупреждений (High=256, Medium=183, Low=176),
+  wall=102.5s под Rosetta. Топ диагностик: V1042(202), V1048(70), V784(54),
+  V522(44), V547(40). Для сравнения: wolfssl — см. отчёты на портале.
+- Отчёт, links.txt, revisions.txt обновлены.
+
+**Следующие шаги:**
+- Импортировать `Project` в cli.py или убрать аннотацию.
+- Проверить stale-статусы failed в status.json (из прошлой сессии).
+- Кандидаты на следующие раунды: abseil-cpp, json-c, bullet3, libwebp.
+
 ## 2026-08-25 — запуск на Apple Silicon, реанализ tinyxml2
 
 **Сделано:**

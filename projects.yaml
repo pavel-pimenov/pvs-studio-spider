@@ -172,6 +172,13 @@ projects:
     ref: master
     description: "TLS/SSL library written in C"
 
+  - name: mbedtls
+    repo: https://github.com/Mbed-TLS/mbedtls.git
+    ref: mbedtls-3.6
+    description: "Mbed TLS (ex-PolarSSL) TLS/SSL and crypto library (C)"
+    submodules:
+      - framework
+
   - name: wxWidgets
     repo: https://github.com/wxWidgets/wxWidgets.git
     ref: master
