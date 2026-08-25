@@ -441,3 +441,33 @@ projects:
       - -DLLAMA_BUILD_EXAMPLES=OFF
       - -DLLAMA_BUILD_SERVER=OFF
       - -DLLAMA_BUILD_APP=OFF
+
+  # Batch 8 (2026-08): small/medium libraries.
+  - name: xxhash
+    repo: https://github.com/Cyan4973/xxHash.git
+    ref: dev
+    description: "Extremely fast non-cryptographic hash algorithm (C)"
+    cmake_src: build/cmake
+
+  - name: minizip-ng
+    repo: https://github.com/zlib-ng/minizip-ng.git
+    ref: develop
+    description: "Zip/archive manipulation library forked from minizip (C)"
+
+  - name: cpr
+    repo: https://github.com/libcpr/cpr.git
+    ref: master
+    description: "C++ Requests: curl wrapper library"
+    cmake_options:
+      # Bundled curl needs libpsl via meson; system libcurl avoids that.
+      - -DCPR_USE_SYSTEM_CURL=ON
+
+  - name: opus
+    repo: https://github.com/xiph/opus.git
+    ref: main
+    description: "Low-latency audio codec (C)"
+
+  - name: md4c
+    repo: https://github.com/mity/md4c.git
+    ref: master
+    description: "Markdown parser in C"

@@ -2,6 +2,27 @@
 
 Журнал работ над проектом PVS-Studio Spider.
 
+## 2026-08-25 (6) — Batch 8: xxhash, minizip-ng, cpr, opus, md4c
+
+**Сделано:**
+- Добавлены 5 компактных библиотек (Batch 8). xxhash — через
+  `cmake_src: build/cmake` (нет CMake в корне).
+- cpr падал на configure: бандленный curl требует libpsl через meson.
+  Лечится `CPR_USE_SYSTEM_CURL=ON` (системный libcurl уже в образе);
+  опция добавлена в cmake_options, cpr проанализирован.
+
+**Результаты (5/5):**
+- xxhash @ c0b5ea9: 29 warn (H=8), wall=14s.
+- minizip-ng @ 7d2917b: 63 (H=9, M=29), wall=53s.
+- opus @ 212d66c: 210 (H=26, M=92), wall=91s.
+- md4c @ 3e7ace2: 37 (H=10, M=18), wall=17s.
+- cpr @ c60259e: 11 (H=1, M=3), wall=78s.
+- В реестре 70 проектов.
+
+**Следующие шаги:**
+- Полный прогон на сервере (нативный amd64) — подтянет все новые проекты.
+- Проверить stale-статусы failed на серверном status.json.
+
 ## 2026-08-25 (5) — freetype догнан, фикс cli.py
 
 **Сделано:**
