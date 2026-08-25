@@ -21,7 +21,7 @@ from . import state as state_mod
 from . import status as status_mod
 from . import sysmon
 from . import util
-from .config import Config
+from .config import Config, Project
 from .util import run
 
 log = logging.getLogger("spider")
