@@ -383,3 +383,28 @@ projects:
     repo: https://github.com/pnggroup/libpng.git
     ref: libpng16
     description: "Portable Network Graphics (PNG) reference library (C)"
+
+  # Batch 5 (2026-08): json/image codecs + Google libs.
+  - name: json-c
+    repo: https://github.com/json-c/json-c.git
+    ref: master
+    description: "JSON parser/printer for C"
+
+  - name: libwebp
+    repo: https://github.com/webmproject/libwebp.git
+    ref: main
+    description: "WebP image codec library (C)"
+
+  - name: abseil-cpp
+    repo: https://github.com/abseil/abseil-cpp.git
+    ref: master
+    description: "Google Abseil common C++ libraries"
+
+  - name: bullet3
+    repo: https://github.com/bulletphysics/bullet3.git
+    ref: master
+    description: "3D physics simulation engine (C++)"
+    cmake_options:
+      - -DBUILD_BULLET2_DEMOS=OFF
+      - -DBUILD_OPENGL3_DEMOS=OFF
+      - -DBUILD_UNIT_TESTS=OFF

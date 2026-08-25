@@ -2,6 +2,26 @@
 
 Журнал работ над проектом PVS-Studio Spider.
 
+## 2026-08-25 (3) — Batch 5: json-c, libwebp, abseil-cpp, bullet3
+
+**Сделано:**
+- Добавлены 4 проекта (Batch 5) в projects.yaml, прогон `analyze --only ...`
+  целиком под Rosetta на Mac (parallel=2).
+
+**Результаты (4/4):**
+- json-c @ d17ad9d: 20 предупреждений (H=0, M=1, L=19), wall=91s.
+- libwebp @ 73730ab: 813 (H=22, M=704, L=87), wall=108s. Топ: V512(448),
+  V1032(221) — в основном false-positive-шум от макросов/дефолтных веток.
+- abseil-cpp @ fe690e6: 220 (H=34, M=97, L=89), wall=409s. Топ: V730(50).
+- bullet3 @ 63c4d67: 2158 (H=332, M=657, L=1169), wall=864s. Топ: V550(436),
+  V730(280). Демки/тесты отключены cmake_options.
+- links.txt/revisions.txt/metrics.json обновлены; всего в реестре 60 проектов.
+
+**Следующие шаги:**
+- Импортировать `Project` в cli.py или убрать аннотацию.
+- Проверить stale-статусы failed в status.json (из прошлой сессии).
+- Кандидаты дальше: protobuf, openal-soft, libsodium, freetype.
+
 ## 2026-08-25 (2) — новый проект mbedtls
 
 **Сделано:**
