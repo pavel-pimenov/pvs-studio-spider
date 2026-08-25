@@ -2,6 +2,29 @@
 
 Журнал работ над проектом PVS-Studio Spider.
 
+## 2026-08-25 (4) — Batch 6 (частично) + llama.cpp
+
+**Сделано:**
+- Batch 6 (protobuf, openal-soft, freetype, libxml2): прогон оборвался по
+  таймауту shell на freetype; protobuf/openal-soft/libxml2 успели
+  проанализироваться и оставлены в реестре. libsodium заменён на libxml2
+  (у libsodium нет CMake-сборки).
+- Добавлен llama-cpp (Batch 7): tools/examples/server/app отключены через
+  cmake_options, анализируется ядро ggml+llama+common.
+
+**Результаты:**
+- protobuf @ 7f86060: 2143s wall — самый долгий проект под Rosetta.
+- openal-soft @ 3f94a50: 986s. libxml2 @ c632489: 68s.
+- llama-cpp @ 3737e41: 1583 предупреждения (H=159, M=430, L=994), wall=618s.
+  Топ: V688(456), V1004(175), V550(163), V576(108).
+- freetype не проанализирован локально (прерван); подхватится при полном
+  прогоне на сервере.
+
+**Следующие шаги:**
+- Догнать freetype (быстрый, ~1-2 мин нативно на сервере).
+- Импортировать `Project` в cli.py или убрать аннотацию.
+- Проверить stale-статусы failed в status.json (из прошлой сессии).
+
 ## 2026-08-25 (3) — Batch 5: json-c, libwebp, abseil-cpp, bullet3
 
 **Сделано:**

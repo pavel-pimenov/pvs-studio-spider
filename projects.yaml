@@ -408,3 +408,36 @@ projects:
       - -DBUILD_BULLET2_DEMOS=OFF
       - -DBUILD_OPENGL3_DEMOS=OFF
       - -DBUILD_UNIT_TESTS=OFF
+
+  # Batch 6 (2026-08): formats/parsing + media.
+  - name: protobuf
+    repo: https://github.com/protocolbuffers/protobuf.git
+    ref: main
+    description: "Google Protocol Buffers (C++)"
+
+  - name: openal-soft
+    repo: https://github.com/kcat/openal-soft.git
+    ref: master
+    description: "Cross-platform 3D audio API (C++)"
+
+  - name: freetype
+    repo: https://github.com/freetype/freetype.git
+    ref: master
+    description: "Font rendering engine (C)"
+
+  - name: libxml2
+    repo: https://github.com/GNOME/libxml2.git
+    ref: master
+    description: "XML parser and toolkit (C)"
+
+  # Batch 7 (2026-08): LLM inference core (tools/examples off).
+  - name: llama-cpp
+    repo: https://github.com/ggml-org/llama.cpp.git
+    ref: master
+    description: "LLM inference engine (ggml, C/C++)"
+    cmake_options:
+      - -DLLAMA_BUILD_TESTS=OFF
+      - -DLLAMA_BUILD_TOOLS=OFF
+      - -DLLAMA_BUILD_EXAMPLES=OFF
+      - -DLLAMA_BUILD_SERVER=OFF
+      - -DLLAMA_BUILD_APP=OFF
