@@ -172,6 +172,13 @@ projects:
     ref: master
     description: "TLS/SSL library written in C"
 
+  - name: mbedtls
+    repo: https://github.com/Mbed-TLS/mbedtls.git
+    ref: mbedtls-3.6
+    description: "Mbed TLS (ex-PolarSSL) TLS/SSL and crypto library (C)"
+    submodules:
+      - framework
+
   - name: wxWidgets
     repo: https://github.com/wxWidgets/wxWidgets.git
     ref: master
@@ -377,7 +384,7 @@ projects:
     ref: libpng16
     description: "Portable Network Graphics (PNG) reference library (C)"
 
-  # Batch 5 (2026-08): user-facing tools, CMake/autotools builds.
+  # Batch 9 (2026-08): user-facing tools, CMake/autotools builds.
   - name: btop
     repo: https://github.com/aristocratos/btop.git
     ref: main
@@ -398,9 +405,90 @@ projects:
     enabled: false
     build_cmd: "autoreconf -i && ./configure --quiet && make -j{jobs}"
 
+  # Batch 5 (2026-08): json/image codecs + Google libs.
+  - name: json-c
+    repo: https://github.com/json-c/json-c.git
+    ref: master
+    description: "JSON parser/printer for C"
+
+  - name: libwebp
+    repo: https://github.com/webmproject/libwebp.git
+    ref: main
+    description: "WebP image codec library (C)"
+
+  - name: abseil-cpp
+    repo: https://github.com/abseil/abseil-cpp.git
+    ref: master
+    description: "Google Abseil common C++ libraries"
+
+  - name: bullet3
+    repo: https://github.com/bulletphysics/bullet3.git
+    ref: master
+    description: "3D physics simulation engine (C++)"
+    cmake_options:
+      - -DBUILD_BULLET2_DEMOS=OFF
+      - -DBUILD_OPENGL3_DEMOS=OFF
+      - -DBUILD_UNIT_TESTS=OFF
+
+  # Batch 6 (2026-08): formats/parsing + media.
+  - name: protobuf
+    repo: https://github.com/protocolbuffers/protobuf.git
+    ref: main
+    description: "Google Protocol Buffers (C++)"
+
+  - name: openal-soft
+    repo: https://github.com/kcat/openal-soft.git
+    ref: master
+    description: "Cross-platform 3D audio API (C++)"
+
+  - name: freetype
+    repo: https://github.com/freetype/freetype.git
+    ref: master
+    description: "Font rendering engine (C)"
+
+  - name: libxml2
+    repo: https://github.com/GNOME/libxml2.git
+    ref: master
+    description: "XML parser and toolkit (C)"
+
+  # Batch 7 (2026-08): LLM inference core (tools/examples off).
   - name: llama.cpp
     repo: https://github.com/ggml-org/llama.cpp.git
     ref: master
-    description: "C/C++ inference of LLM models"
+    description: "LLM inference engine (ggml, C/C++)"
     cmake_options:
-      - -DLLAMA_NATIVE=OFF
+      - -DLLAMA_BUILD_TESTS=OFF
+      - -DLLAMA_BUILD_TOOLS=OFF
+      - -DLLAMA_BUILD_EXAMPLES=OFF
+      - -DLLAMA_BUILD_SERVER=OFF
+      - -DLLAMA_BUILD_APP=OFF
+
+  # Batch 8 (2026-08): small/medium libraries.
+  - name: xxhash
+    repo: https://github.com/Cyan4973/xxHash.git
+    ref: dev
+    description: "Extremely fast non-cryptographic hash algorithm (C)"
+    cmake_src: build/cmake
+
+  - name: minizip-ng
+    repo: https://github.com/zlib-ng/minizip-ng.git
+    ref: develop
+    description: "Zip/archive manipulation library forked from minizip (C)"
+
+  - name: cpr
+    repo: https://github.com/libcpr/cpr.git
+    ref: master
+    description: "C++ Requests: curl wrapper library"
+    cmake_options:
+      # Bundled curl needs libpsl via meson; system libcurl avoids that.
+      - -DCPR_USE_SYSTEM_CURL=ON
+
+  - name: opus
+    repo: https://github.com/xiph/opus.git
+    ref: main
+    description: "Low-latency audio codec (C)"
+
+  - name: md4c
+    repo: https://github.com/mity/md4c.git
+    ref: master
+    description: "Markdown parser in C"

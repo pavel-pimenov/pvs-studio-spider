@@ -2,6 +2,7 @@ services:
   spider:
     build: .
     image: pvs-studio-spider
+    platform: linux/amd64
     env_file: .env
     command: analyze
     volumes:
