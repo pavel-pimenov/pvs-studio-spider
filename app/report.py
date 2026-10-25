@@ -8,7 +8,6 @@ import shutil
 from collections import Counter
 from pathlib import Path
 
-from .clone import head_commit
 from .config import Config, Project
 from .util import run
 
@@ -65,7 +64,16 @@ def summarize(project: Project, cfg: Config) -> dict:
     return stats
 
 
-def convert(project: Project, plog: Path, cfg: Config) -> dict:
+def _empty_fullhtml(report_dir: Path) -> bool:
+    """True if the fullhtml report has no warnings (PVS-Studio 8.0 bug)."""
+    idx = report_dir / "index.html"
+    if not idx.exists():
+        return True
+    text = idx.read_text(encoding="utf-8", errors="replace")
+    return "All messages were filtered out" in text
+
+
+def convert(project: Project, plog: Path, cfg: Config, commit: str = "") -> dict:
     """Convert a .plog report into an interactive HTML report and JSON stats."""
     report_dir = cfg.reports_dir / project.slug
     shutil.rmtree(report_dir, ignore_errors=True)
@@ -78,7 +86,23 @@ def convert(project: Project, plog: Path, cfg: Config) -> dict:
         str(plog),
     ]
     run(fullhtml, check=False)
-    _dedup_jquery(report_dir, cfg.reports_dir / "static")
+
+    if _empty_fullhtml(report_dir):
+        log.warning("%s: fullhtml empty, falling back to html format", project.slug)
+        single_html = cfg.reports_dir / f"{project.slug}.html"
+        html_cmd = [
+            "plog-converter",
+            "-a", cfg.convert_groups,
+            "-t", "html",
+            "-o", str(single_html),
+            str(plog),
+        ]
+        run(html_cmd, check=False)
+        shutil.rmtree(report_dir, ignore_errors=True)
+        report_dir.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(single_html), str(report_dir / "index.html"))
+    else:
+        _dedup_jquery(report_dir, cfg.reports_dir / "static")
 
     json_path = cfg.reports_dir / f"{project.slug}.json"
     to_json = [
@@ -93,7 +117,7 @@ def convert(project: Project, plog: Path, cfg: Config) -> dict:
     stats = parse_json(json_path)
     stats["report"] = _find_index(report_dir)
     stats["plog"] = plog.name
-    stats["commit"] = head_commit(cfg.src_dir / project.slug)
+    stats["commit"] = commit
     stats["analyzed_at"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
     return stats
 

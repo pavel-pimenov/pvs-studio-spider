@@ -376,3 +376,31 @@ projects:
     repo: https://github.com/pnggroup/libpng.git
     ref: libpng16
     description: "Portable Network Graphics (PNG) reference library (C)"
+
+  # Batch 5 (2026-08): user-facing tools, CMake/autotools builds.
+  - name: btop
+    repo: https://github.com/aristocratos/btop.git
+    ref: main
+    description: "System monitor showing CPU, memory and processes"
+    cmake_options:
+      - -DBTOP_PEDANTIC=OFF
+
+  - name: imgui
+    repo: https://github.com/ocornut/imgui.git
+    ref: master
+    description: "Dear ImGui: bloat-free GUI library for C++"
+    build_cmd: 'printf "#include \"imgui.cpp\"\n#include \"imgui_draw.cpp\"\n#include \"imgui_tables.cpp\"\n#include \"imgui_widgets.cpp\"\n#include \"imgui_demo.cpp\"\n" > tu.cpp && g++ -std=c++17 -I. -c tu.cpp -o tu.o'
+
+  - name: aria2
+    repo: https://github.com/aria2/aria2.git
+    ref: master
+    description: "Lightweight multi-protocol download utility (C++)"
+    enabled: false
+    build_cmd: "autoreconf -i && ./configure --quiet && make -j{jobs}"
+
+  - name: llama.cpp
+    repo: https://github.com/ggml-org/llama.cpp.git
+    ref: master
+    description: "C/C++ inference of LLM models"
+    cmake_options:
+      - -DLLAMA_NATIVE=OFF

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import logging
 import os
 import shutil
@@ -86,6 +87,29 @@ def cmd_analyze(args) -> int:
     full_projects = list(cfg.projects)
     prune_orphans(cfg)
 
+    lock_path = cfg.reports_dir.parent / ".spider.lock"
+    lock_fd = open(lock_path, "w")
+    try:
+        fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        log.error(
+            "another spider process is running (lockfile: %s). "
+            "Use --force or wait for it to finish.",
+            lock_path,
+        )
+        lock_fd.close()
+        return 1
+    lock_fd.write(f"{os.getpid()}\n")
+    lock_fd.flush()
+
+    try:
+        return _run_analyze(args, cfg, full_projects)
+    finally:
+        fcntl.flock(lock_fd, fcntl.LOCK_UN)
+        lock_fd.close()
+
+
+def _run_analyze(args, cfg: Config, full_projects: list) -> int:
     if args.only:
         wanted = set(args.only)
         missing = wanted - {p.slug for p in cfg.projects}
@@ -142,7 +166,7 @@ def cmd_analyze(args) -> int:
             analyze_sec = round(time.perf_counter() - t, 1)
             progress.set(project.slug, "converting", "plog-converter fullhtml/json")
             t = time.perf_counter()
-            stats = report_mod.convert(project, plog, cfg)
+            stats = report_mod.convert(project, plog, cfg, commit=commit)
             convert_sec = round(time.perf_counter() - t, 1)
             entry = {
                 "commit": commit,

@@ -11,29 +11,52 @@ from .util import run
 log = logging.getLogger("spider.analyze")
 
 
+def _is_credentials_file(path: Path) -> bool:
+    """True if the file contains two non-empty lines (username + key)."""
+    try:
+        lines = [l.strip() for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+        return len(lines) == 2
+    except OSError:
+        return False
+
+
+def _configure_credentials(username: str, key: str) -> None:
+    log.info("configuring PVS-Studio credentials")
+    run(["pvs-studio-analyzer", "credentials", username, key], check=False)
+
+
 def configure_license() -> None:
     """Make the PVS-Studio license available: credentials, explicit file, or the
     default location (~/.config/PVS-Studio/PVS-Studio.lic)."""
+    username = os.environ.get("PVS_USERNAME")
+    key = os.environ.get("PVS_KEY")
+    if username and key:
+        _configure_credentials(username, key)
+        return
+
     license_path = os.environ.get("PVS_STUDIO_LICENSE")
     if license_path:
         resolved = Path(license_path).expanduser().resolve()
-        log.info("PVS_STUDIO_LICENSE is set to %s", resolved)
         if not resolved.exists():
             log.warning("license file %s not found, analysis may fail", resolved)
-        os.environ["PVS_STUDIO_LICENSE"] = str(resolved)
+        elif _is_credentials_file(resolved):
+            log.info("PVS_STUDIO_LICENSE points to a credentials file, registering credentials")
+            lines = [l.strip() for l in resolved.read_text(encoding="utf-8").splitlines() if l.strip()]
+            _configure_credentials(lines[0], lines[1])
+        else:
+            log.info("using license file at %s", resolved)
+            os.environ["PVS_STUDIO_LICENSE"] = str(resolved)
         return
 
     default_lic = Path.home() / ".config" / "PVS-Studio" / "PVS-Studio.lic"
     if default_lic.exists():
-        log.info("using license file at %s", default_lic)
-        os.environ["PVS_STUDIO_LICENSE"] = str(default_lic)
-        return
-
-    username = os.environ.get("PVS_USERNAME")
-    key = os.environ.get("PVS_KEY")
-    if username and key:
-        log.info("configuring PVS-Studio credentials")
-        run(["pvs-studio-analyzer", "credentials", username, key], check=False)
+        if _is_credentials_file(default_lic):
+            log.info("default .lic is a credentials file, registering credentials")
+            lines = [l.strip() for l in default_lic.read_text(encoding="utf-8").splitlines() if l.strip()]
+            _configure_credentials(lines[0], lines[1])
+        else:
+            log.info("using license file at %s", default_lic)
+            os.environ["PVS_STUDIO_LICENSE"] = str(default_lic)
         return
 
     log.warning(

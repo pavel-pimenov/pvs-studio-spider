@@ -61,6 +61,7 @@ RUN apt-get update \
         libtinyxml2-dev \
         libspdlog-dev \
         nlohmann-json3-dev \
+        autopoint \
         gettext \
         python3 \
         python3-pip \
